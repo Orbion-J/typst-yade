@@ -2,8 +2,8 @@
 #import "imports.typ" : fletcher
 
 #let make_node(json_node, size_grid, preamble) = {
-  let x = json_node.label.pos.at(0) / size_grid
-  let y = json_node.label.pos.at(1) / size_grid
+  let x = json_node.label.pos.at(0) / size_grid * 1em
+  let y = -json_node.label.pos.at(1) / size_grid * 1em
   fletcher.node(
     pos: (x, y),
     label: make_label(

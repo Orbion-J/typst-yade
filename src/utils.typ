@@ -4,11 +4,11 @@
 
 #let make_label(json_label, preamble, is_text_node: false, default: none) = {
   if is_text_node {
-    return json_label
+    return mitex.mitext(raw(preamble + json_label))
   } else {
     if json_label == "" {
       return default
     }
-    mitex.mi(raw(preamble + json_label))
+    return mitex.mi(raw(preamble + json_label))
   }
 }

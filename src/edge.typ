@@ -1,5 +1,5 @@
 #import "utils.typ": *
-#import "imports.typ": fletcher
+#import "imports.typ": cetz, fletcher, mitex
 
 
 // /// Style analysis
@@ -30,9 +30,12 @@
     extrude: (0,),
     label-angle: 0deg,
     label-side: left,
-    marks: (none, "head"),
+    // marks: (none, "head"),
+    marks: (none, none, "head"),
     shift: (0, 0),
     stroke: auto,
+    decorations: none,
+    dash: none,
   )
 
   // Reading style
@@ -62,10 +65,13 @@
       let head = s.at(1)
       let value = if head == "none" {
         none
+      } else if head == "twoheads" {
+        ">>"
       } else {
         panic_parameters(head, "head")
       }
-      args.marks.at(1) = value
+      // args.marks.at(1) = value
+      args.marks.at(2) = value
 
       // bend -> bend
     } else if s.at(0) == "bend" {
@@ -111,9 +117,67 @@
       args.stroke = none
       args.label-angle = right
 
+      // color -> :(
+    } else if s.at(0) == "color" {
+      assert_parameters(s, 1, "color")
+
+      color = s.at(1)
+      // UNSUPPORTED
+
+      // position -> ignore
+    } else if s.at(0) == "position" {
+      assert_parameters(s, 1, "position")
+
+      // wavy -> decorations
+    } else if s.at(0) == "wavy" {
+      assert_parameters(s, 0, "wavy")
+      args.decorations = "wave"
+
+      // dashed -> dash
+    } else if s.at(0) == "dashed" {
+      assert_parameters(s, 0, "dashed")
+      args.dash = "dashed"
+
+      // tail -> marks
+    } else if s.at(0) == "tail" {
+      assert_parameters(s, 1, "tail")
+
+      let tail = s.at(1)
+      let value = if tail == "mapsto" {
+        "bar"
+      } else if tail == "hook" {
+        "hook"
+      } else if tail == "hookalt" {
+        "hook'"
+      } else {
+        panic_parameters(tail, "tail")
+      }
+      args.marks.at(0) = value
+
+      // marker -> marks
+    } else if s.at(0) == "marker" {
+      assert_parameters(s, 1, "marker")
+
+      let marker = s.at(1)
+      args.marks.at(1) = if marker == "\\bullet" {
+        "circle"
+      } else if marker == "\\circ" {
+        (inherit: "circle", fill: none)
+      } else if marker == "|" {
+        "|"
+      } else {
+        (draw: it => { cetz.draw.content((0, 0), scale(70%, mitex.mi(raw(marker)))) })
+      }
+
+      // pullshout -> ?
+    } else if s.at(0) == "pullshout" {
+      assert_parameters(s, 2, "pullshout")
+      args.marks.at(2) = none
+      // UNSUPPORTED
+
       // Unknown style
     } else {
-      panic("Error: Unrecognized style '" + s + "'.")
+      panic("Error: Unrecognized style '" + s.at(0) + "'.")
     }
   }
 
