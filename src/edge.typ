@@ -22,6 +22,28 @@
   panic("Error: unknown value '" + str(value) + "' for style '" + str(name) + "'.")
 }
 
+#let resolve-color(color) = {
+  if color == "red" {
+    red
+  } else if color == "blue" {
+    blue
+  } else if color == "purple" {
+    purple
+  } else if color == "green" {
+    green
+  } else if color == "orange" {
+    orange
+  } else if color == "yellow" {
+    yellow
+  } else if color == "gray" {
+    gray
+  } else if color == "black" {
+    black
+  } else {
+    panic("Error: unrecognized color '" + color + "'.")
+  }
+}
+
 
 #let args_from_style(json_style, size) = {
   // Default args
@@ -30,8 +52,7 @@
     extrude: (0,),
     label-angle: 0deg,
     label-side: left,
-    // marks: (none, "head"),
-    marks: (none, none, "head"),
+    marks: (none, none, (inherit:"head")),
     shift: (0, 0),
     stroke: auto,
     decorations: none,
@@ -66,12 +87,11 @@
       let value = if head == "none" {
         none
       } else if head == "twoheads" {
-        ">>"
+        (inherit:">>")
       } else {
         panic_parameters(head, "head")
       }
-      // args.marks.at(1) = value
-      args.marks.at(2) = value
+      args.marks.at(2) += value
 
       // bend -> bend
     } else if s.at(0) == "bend" {
@@ -117,12 +137,11 @@
       args.stroke = none
       args.label-angle = right
 
-      // color -> :(
+      // color -> stroke
     } else if s.at(0) == "color" {
       assert_parameters(s, 1, "color")
 
-      color = s.at(1)
-      // UNSUPPORTED
+      args.stroke = resolve-color(s.at(1))
 
       // position -> ignore
     } else if s.at(0) == "position" {
@@ -152,7 +171,7 @@
       } else {
         panic_parameters(tail, "tail")
       }
-      args.marks.at(0) = value
+      args.marks.at(0) += (inherit:value)
 
       // marker -> marks
     } else if s.at(0) == "marker" {
@@ -160,14 +179,26 @@
 
       let marker = s.at(1)
       args.marks.at(1) = if marker == "\\bullet" {
-        "circle"
+        (inherit:"circle")
       } else if marker == "\\circ" {
         (inherit: "circle", fill: none)
       } else if marker == "|" {
-        "|"
+        (inherit:"|")
       } else {
         (draw: it => { cetz.draw.content((0, 0), scale(70%, mitex.mi(raw(marker)))) })
       }
+
+      // headColor -> marks
+    } else if s.at(0) == "headColor" {
+      assert_parameters(s, 1, "headColor")
+
+      args.marks.at(2) += (stroke:resolve-color(s.at(1)))
+
+      // tailColor -> marks
+    } else if s.at(0) == "tailColor" {
+      assert_parameters(s, 1, "tailColor")
+
+      args.marks.at(0) += (stroke:resolve-color(s.at(1)))
 
       // pullshout -> ?
     } else if s.at(0) == "pullshout" {

@@ -1,1 +1,1 @@
-#import "diagram.typ": diagram
+#import "diagram.typ": diagram, yade
