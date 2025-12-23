@@ -52,7 +52,7 @@
     extrude: (0,),
     label-angle: 0deg,
     label-side: left,
-    marks: (none, none, (inherit:"head")),
+    marks: (none, none, (inherit: "head")),
     shift: (0, 0),
     stroke: auto,
     decorations: none,
@@ -87,7 +87,7 @@
       let value = if head == "none" {
         none
       } else if head == "twoheads" {
-        (inherit:">>")
+        (inherit: ">>")
       } else {
         panic_parameters(head, "head")
       }
@@ -120,7 +120,7 @@
 
       let shiftSource = float(s.at(1))
       let value = shiftSource / size * 2
-      args.shift[0] = value
+      args.shift.at(0) = value
 
       // shiftTarget -> shift
     } else if s.at(0) == "shiftTarget" {
@@ -128,7 +128,7 @@
 
       let shiftTarget = float(s.at(1))
       let value = shiftTarget / size * 2
-      args.shift[1] = value
+      args.shift.at(1) = value
 
       // adjunction -> stroke, label-angle
     } else if s.at(0) == "adjunction" {
@@ -171,7 +171,7 @@
       } else {
         panic_parameters(tail, "tail")
       }
-      args.marks.at(0) += (inherit:value)
+      args.marks.at(0) += (inherit: value)
 
       // marker -> marks
     } else if s.at(0) == "marker" {
@@ -179,11 +179,11 @@
 
       let marker = s.at(1)
       args.marks.at(1) = if marker == "\\bullet" {
-        (inherit:"circle")
+        (inherit: "circle")
       } else if marker == "\\circ" {
         (inherit: "circle", fill: none)
       } else if marker == "|" {
-        (inherit:"|")
+        (inherit: "|")
       } else {
         (draw: it => { cetz.draw.content((0, 0), scale(70%, mitex.mi(raw(marker)))) })
       }
@@ -192,19 +192,22 @@
     } else if s.at(0) == "headColor" {
       assert_parameters(s, 1, "headColor")
 
-      args.marks.at(2) += (stroke:resolve-color(s.at(1)))
+      args.marks.at(2) += (stroke: resolve-color(s.at(1)))
 
       // tailColor -> marks
     } else if s.at(0) == "tailColor" {
       assert_parameters(s, 1, "tailColor")
 
-      args.marks.at(0) += (stroke:resolve-color(s.at(1)))
+      args.marks.at(0) += (stroke: resolve-color(s.at(1)))
 
       // pullshout -> ?
     } else if s.at(0) == "pullshout" {
       assert_parameters(s, 2, "pullshout")
       args.marks.at(2) = none
-      // UNSUPPORTED
+      let shift_s = int(s.at(1)) / 100
+      let shift_t = int(s.at(2)) / 100
+      args.shift = (shift_s, shift_t)
+      // UNSUPPORTED ??
 
       // Unknown style
     } else {

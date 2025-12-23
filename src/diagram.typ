@@ -4,7 +4,7 @@
 
 #let base_scale = 7 // à vue de nez
 
-#let make_diagram(diagram, scale: 1, debug: false) = {
+#let src_diagram(diagram, scale: 1) = {
   let json_diagram = if type(diagram) == dictionary {
     diagram
   } else if type(diagram) == content and diagram.func() == raw {
@@ -19,8 +19,7 @@
   let size = 1 / base_scale * if scale == none { 1 } else { 1 / scale * tab.sizeGrid }
   let preamble = graph.latexPreamble
 
-  fletcher.diagram(
-    debug: if debug { 3 } else { false },
+  (
     ..make_nodes(
       nodes,
       size,
@@ -31,6 +30,13 @@
       size,
       preamble,
     ),
+  )
+}
+
+#let make_diagram(diagram, scale: 1, debug: false) = {
+  fletcher.diagram(
+    debug: if debug { 3 } else { false },
+    ..src_diagram(diagram, scale: scale),
   )
 }
 
