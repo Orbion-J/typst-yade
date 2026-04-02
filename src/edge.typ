@@ -45,19 +45,25 @@
 }
 
 
-#let args_from_style(json_style, size) = {
+#let args_from_style(json_style, size, start, end) = {
   // Default args
   let args = (
-    bend: 0deg,
+    vertices: (start, end),
+    // bend: 0deg,
     extrude: (0,),
     label-angle: 0deg,
-    label-side: left,
+    label-side: true,
+    label-pos: 50%,
     marks: (none, none, (inherit: "head")),
-    shift: (0, 0),
+    // shift: (0, 0),
     stroke: auto,
-    decorations: none,
+    // decorations: none,
     dash: none,
+    // corner: none,
+    corner-radius: none,
+    // outset: auto,
   )
+  let flags = ()
 
   // Reading style
   for item in json_style {
@@ -68,16 +74,15 @@
       assert_parameters(s, 1, "alignment")
 
       let alignment = s.at(1)
-      let value = if alignment == "right" {
-        right
+      args.label-side = if alignment == "right" {
+        false
       } else if alignment == "left" {
-        left
+        true
       } else if alignment == "over" {
-        return center
+        center
       } else {
-        panic_parameters(alignment, "alignement")
+        panic_parameters(alignment, "alignment")
       }
-      args.label-side = value
 
       // head -> marks
     } else if s.at(0) == "head" {
@@ -93,13 +98,32 @@
       }
       args.marks.at(2) += value
 
-      // bend -> bend
+      // bend -> bezier
     } else if s.at(0) == "bend" {
       assert_parameters(s, 1, "bend")
 
-      let bend = float(s.at(1))
-      let value = calc.atan(-bend)
-      args.bend = value
+      let bend = -float(s.at(1))
+      let bezier_point = (
+        (s, e) => {
+          let (xs, ys, zs) = s
+          let (xe, ye, ze) = e
+          assert(zs == 0 and ze == 0, message: "Error: non-zero z coordinate")
+          let dx = xe - xs
+          let dy = ye - ys
+          let d = calc.sqrt(dx * dx + dy * dy)
+          let xcenter = xs + dx / 2
+          let ycenter = ys + dy / 2
+          let angle = if dx != 0 { calc.atan(dy / dx) } else { 90deg }
+          let dxtop_sign = if dy > 0 { -1 } else { 1 }
+          let dytop_sign = if dx > 0 { 1 } else { -1 }
+          let dxtop = dxtop_sign * calc.abs(calc.sin(angle)) * bend * d
+          let dytop = dytop_sign * calc.abs(calc.cos(angle)) * bend * d
+          (xcenter + dxtop, ycenter + dytop, 0)
+        },
+        start,
+        end,
+      )
+      args.bezier = (bezier_point,)
 
       // kind -> extrude, stroke
     } else if s.at(0) == "kind" {
@@ -108,6 +132,7 @@
       let kind = s.at(1)
       if kind == "double" {
         args.extrude = (-1.5, 1.5)
+        // args.outset = (0.3em, 0.3em)
       } else if kind == "none" {
         args.stroke = none
       } else {
@@ -119,16 +144,20 @@
       assert_parameters(s, 1, "shiftSource")
 
       let shiftSource = float(s.at(1))
-      let value = shiftSource / size * 2
-      args.shift.at(0) = value
+      let value = (shiftSource / 10 + 0.5) * 100%
+      // let value = shiftSource / size
+      // args.shift.at(0) = value
+      args.vertices.at(0) += (anchor: value)
 
       // shiftTarget -> shift
     } else if s.at(0) == "shiftTarget" {
       assert_parameters(s, 1, "shiftTarget")
 
       let shiftTarget = float(s.at(1))
-      let value = shiftTarget / size * 2
-      args.shift.at(1) = value
+      let value = (shiftTarget / 10 + 0.5) * 100%
+      // let value = shiftTarget / size * 2
+      // args.shift.at(1) = value
+      args.vertices.at(1) += (anchor: value)
 
       // adjunction -> stroke, label-angle
     } else if s.at(0) == "adjunction" {
@@ -143,14 +172,17 @@
 
       args.stroke = resolve-color(s.at(1))
 
-      // position -> ignore
+      // position -> label-pos
     } else if s.at(0) == "position" {
       assert_parameters(s, 1, "position")
+
+      args.label-pos = float(s.at(1))
 
       // wavy -> decorations
     } else if s.at(0) == "wavy" {
       assert_parameters(s, 0, "wavy")
-      args.decorations = "wave"
+      // flags.push(wave)
+      // TODO ??
 
       // dashed -> dash
     } else if s.at(0) == "dashed" {
@@ -200,14 +232,18 @@
 
       args.marks.at(0) += (stroke: resolve-color(s.at(1)))
 
-      // pullshout -> ?
+      // pullshout -> corner (pas ouf)
     } else if s.at(0) == "pullshout" {
       assert_parameters(s, 2, "pullshout")
       args.marks.at(2) = none
-      let shift_s = int(s.at(1)) / 100
-      let shift_t = int(s.at(2)) / 100
-      args.shift = (shift_s, shift_t)
-      // UNSUPPORTED ??
+      // let shift_s = (int(s.at(1)) - 50) / 100
+      // let shift_t = (int(s.at(2)) - 50) / 100
+      // args.shift = (shift_s, shift_t)
+      let shift_s = float(s.at(1)) * 1%
+      let shift_t = float(s.at(2)) * 1%
+      args.vertices.at(0) += (anchor: shift_s)
+      args.vertices.at(1) += (anchor: shift_t)
+      // args.corner = left
 
       // Unknown style
     } else {
@@ -215,19 +251,22 @@
     }
   }
 
-  return args
+
+  return (args, flags)
 }
 
 
 // /// Draw edge
 
 #let make_edge(json_edge, size, preamble) = {
+  let start = (name: str(json_edge.from))
+  let end = (name: str(json_edge.to))
+  let (args, flags) = args_from_style(json_edge.label.style, size, start, end)
   fletcher.edge(
-    vertices: (id_to_label(json_edge.from), id_to_label(json_edge.to)),
-    label: make_label(json_edge.label.label, preamble),
-    label-size: 0.7em,
+    label: make_label(json_edge.label.label, preamble, size: 0.7em),
     name: id_to_label(json_edge.id),
-    ..args_from_style(json_edge.label.style, size),
+    ..args,
+    ..flags,
   )
 }
 

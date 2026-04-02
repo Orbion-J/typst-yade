@@ -2,7 +2,7 @@
 #import "node.typ": make_nodes
 #import "edge.typ": make_edges
 
-#let base_scale = 7 // à vue de nez
+#let base_scale = 4 // à vue de nez
 
 #let src_diagram(diagram, scale: 1) = {
   let json_diagram = if type(diagram) == dictionary {
@@ -35,7 +35,8 @@
 
 #let make_diagram(diagram, scale: 1, debug: false) = {
   fletcher.diagram(
-    debug: if debug { 3 } else { false },
+    debug: debug,
+    // debug: if debug { 3 } else { false },
     ..src_diagram(diagram, scale: scale),
   )
 }
@@ -47,14 +48,19 @@
   // context {
   //   text_size.update(1em.to-absolute())
   // }
+  // to compensate the fact that text size in raw is by defaut 0.8em => no very robust, better solution above? (breaks preview)
+  let size = if size == auto {
+    1.25em
+  } else {
+    size
+  }
   show raw.where(lang: "yade"): it => {
-    let size = if size == auto {
-      1.25em
-    } else {
-      size
-    }
-    set text(size) // to compensate the fact that text size in raw is by defaut 0.8em => no very robust, better solution above? (breaks preview)
+    set text(size)
     make_diagram(it, scale: scale, debug: debug)
+  }
+  show raw.where(lang: "yade-src"): it => {
+    set text(size)
+    src_diagram(it, scale: scale)
   }
   body
 }
