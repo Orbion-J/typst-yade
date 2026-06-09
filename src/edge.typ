@@ -131,7 +131,7 @@
         start,
         end,
       )
-      args.bezier = (bezier_point,)
+      // args.bezier = (bezier_point,)
 
       // kind -> extrude, stroke
     } else if key == "kind" {
