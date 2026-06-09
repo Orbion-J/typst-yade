@@ -4,7 +4,7 @@
 
 #let base_scale = 4 // à vue de nez
 
-#let src_diagram(diagram, scale: 1) = {
+#let src_diagram(diagram, dictionary, scale: 1) = {
   let json_diagram = if type(diagram) == dictionary {
     diagram
   } else if type(diagram) == content and diagram.func() == raw {
@@ -24,26 +24,28 @@
       nodes,
       size,
       preamble,
+      dictionary,
     ),
     ..make_edges(
       edges,
       size,
       preamble,
+      dictionary,
     ),
   )
 }
 
-#let make_diagram(diagram, scale: 1, debug: false) = {
+#let make_diagram(diagram, dictionary, scale: 1, debug: false) = {
   fletcher.diagram(
     debug: debug,
     // debug: if debug { 3 } else { false },
-    ..src_diagram(diagram, scale: scale),
+    ..src_diagram(diagram, dictionary, scale: scale),
   )
 }
 
 #let diagram = make_diagram
 
-#let yade(body, size: auto, scale: 1, debug: false) = {
+#let yade(body, dictionary: (:), size: auto, scale: 1, debug: false) = {
   // let text_size = state("text_size", 1em)
   // context {
   //   text_size.update(1em.to-absolute())
@@ -56,11 +58,11 @@
   }
   show raw.where(lang: "yade"): it => {
     set text(size)
-    make_diagram(it, scale: scale, debug: debug)
+    make_diagram(it, dictionary, scale: scale, debug: debug)
   }
   show raw.where(lang: "yade-src"): it => {
     set text(size)
-    src_diagram(it, scale: scale)
+    src_diagram(it, dictionary, scale: scale)
   }
   body
 }
