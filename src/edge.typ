@@ -175,7 +175,7 @@
       args.label-angle = right
 
       // color -> stroke
-    } else if key == "color" {
+    } else if key == "color " {
       assert_parameters(s, 1, "color")
 
       args.stroke = resolve-color(s.at(1))
