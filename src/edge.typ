@@ -45,7 +45,16 @@
 }
 
 
-#let args_from_style(json_style, size, start, end) = {
+#let find_edge(x, json_edges) = {
+  for edge in json_edges {
+    if edge.id == x.name {
+      return edge
+    }
+  }
+  panic("Edge not found")
+}
+
+#let args_from_style(json_style, size, start, end, json_edges) = {
   // Default args
   let args = (
     vertices: (start, end),
@@ -63,17 +72,16 @@
     corner-radius: none,
     // outset: auto,
   )
-  let flags = ()
 
   // Reading style
-  for item in json_style {
-    let s = item.split(" ")
+  for (key, val) in json_style {
+      let s = (key, val)
 
     // alignment -> side
-    if s.at(0) == "alignment" {
+    if key == "alignment" {
       assert_parameters(s, 1, "alignment")
 
-      let alignment = s.at(1)
+      let alignment = val
       args.label-side = if alignment == "right" {
         false
       } else if alignment == "left" {
@@ -85,10 +93,10 @@
       }
 
       // head -> marks
-    } else if s.at(0) == "head" {
+    } else if key == "head" {
       assert_parameters(s, 1, "head")
 
-      let head = s.at(1)
+      let head = val
       let value = if head == "none" {
         none
       } else if head == "twoheads" {
@@ -96,10 +104,10 @@
       } else {
         panic_parameters(head, "head")
       }
-      args.marks.at(2) += value
+      args.marks.at(2) = value
 
       // bend -> bezier
-    } else if s.at(0) == "bend" {
+    } else if key == "bend" {
       assert_parameters(s, 1, "bend")
 
       let bend = -float(s.at(1))
@@ -123,13 +131,13 @@
         start,
         end,
       )
-      args.bezier = (bezier_point,)
+      // args.bezier = (bezier_point,)
 
       // kind -> extrude, stroke
-    } else if s.at(0) == "kind" {
+    } else if key == "kind" {
       assert_parameters(s, 1, "kind")
 
-      let kind = s.at(1)
+      let kind = val
       if kind == "double" {
         args.extrude = (-1.5, 1.5)
         // args.outset = (0.3em, 0.3em)
@@ -140,7 +148,7 @@
       }
 
       // shiftSource -> shift
-    } else if s.at(0) == "shiftSource" {
+    } else if key == "shiftSource" {
       assert_parameters(s, 1, "shiftSource")
 
       let shiftSource = float(s.at(1))
@@ -150,7 +158,7 @@
       args.vertices.at(0) += (anchor: value)
 
       // shiftTarget -> shift
-    } else if s.at(0) == "shiftTarget" {
+    } else if key == "shiftTarget" {
       assert_parameters(s, 1, "shiftTarget")
 
       let shiftTarget = float(s.at(1))
@@ -160,40 +168,40 @@
       args.vertices.at(1) += (anchor: value)
 
       // adjunction -> stroke, label-angle
-    } else if s.at(0) == "adjunction" {
+    } else if key == "adjunction" {
       assert_parameters(s, 0, "adjunction")
 
       args.stroke = none
       args.label-angle = right
 
       // color -> stroke
-    } else if s.at(0) == "color" {
+    } else if key == "color " {
       assert_parameters(s, 1, "color")
 
       args.stroke = resolve-color(s.at(1))
 
       // position -> label-pos
-    } else if s.at(0) == "position" {
+    } else if key == "position" {
       assert_parameters(s, 1, "position")
 
       args.label-pos = float(s.at(1))
 
       // wavy -> decorations
-    } else if s.at(0) == "wavy" {
+    } else if key == "wavy" {
       assert_parameters(s, 0, "wavy")
       // flags.push(wave)
       // TODO ??
 
       // dashed -> dash
-    } else if s.at(0) == "dashed" {
-      assert_parameters(s, 0, "dashed")
-      args.dash = "dashed"
-
+    } else if key == "dashed" {
+      if val == true {
+        args.dash = "dashed"
+      }
       // tail -> marks
-    } else if s.at(0) == "tail" {
+    } else if key == "tail" {
       assert_parameters(s, 1, "tail")
 
-      let tail = s.at(1)
+      let tail = val
       let value = if tail == "mapsto" {
         "bar"
       } else if tail == "hook" {
@@ -206,10 +214,10 @@
       args.marks.at(0) += (inherit: value)
 
       // marker -> marks
-    } else if s.at(0) == "marker" {
+    } else if key == "marker" {
       assert_parameters(s, 1, "marker")
 
-      let marker = s.at(1)
+      let marker = val
       args.marks.at(1) = if marker == "\\bullet" {
         (inherit: "circle")
       } else if marker == "\\circ" {
@@ -221,56 +229,59 @@
       }
 
       // headColor -> marks
-    } else if s.at(0) == "headColor" {
+    } else if key == "headColor" {
       assert_parameters(s, 1, "headColor")
 
-      args.marks.at(2) += (stroke: resolve-color(s.at(1)))
+      args.marks.at(2) += (stroke: resolve-color(val))
 
       // tailColor -> marks
-    } else if s.at(0) == "tailColor" {
+    } else if key == "tailColor" {
       assert_parameters(s, 1, "tailColor")
 
-      args.marks.at(0) += (stroke: resolve-color(s.at(1)))
+      args.marks.at(0) += (stroke: resolve-color(val))
 
       // pullshout -> corner (pas ouf)
-    } else if s.at(0) == "pullshout" {
+    } else if key == "pullshout" {
       assert_parameters(s, 2, "pullshout")
       args.marks.at(2) = none
       // let shift_s = (int(s.at(1)) - 50) / 100
       // let shift_t = (int(s.at(2)) - 50) / 100
       // args.shift = (shift_s, shift_t)
-      let shift_s = float(s.at(1)) * 1%
-      let shift_t = float(s.at(2)) * 1%
-      args.vertices.at(0) += (anchor: shift_s)
-      args.vertices.at(1) += (anchor: shift_t)
+      // let shift_s = float(s.at(1)) * 1%
+      // let shift_t = float(s.at(2)) * 1%
+      // args.vertices.at(0) += (anchor: shift_s)
+      // args.vertices.at(1) += (anchor: shift_t)
       // args.corner = left
+
+      let root = make_start(find_edge(start, json_edge))
 
       // Unknown style
     } else {
-      panic("Error: Unrecognized style '" + s.at(0) + "'.")
+      panic("Error: Unrecognized style '" + key + "'.")
     }
   }
 
 
-  return (args, flags)
+  return args
 }
 
 
 // /// Draw edge
+#let make_start(json_edge) = (name: str(json_edge.from))
+#let make_end(json_edge) = (name: str(json_edge.to))
 
-#let make_edge(json_edge, size, preamble) = {
-  let start = (name: str(json_edge.from))
-  let end = (name: str(json_edge.to))
-  let (args, flags) = args_from_style(json_edge.label.style, size, start, end)
+#let make_edge(json_edge, size, preamble, dictionnary, json_edges) = {
+  let start = make_start(json_edge) 
+  let end = make_end(json_edge) 
+  let args = args_from_style(json_edge.label.options, size, start, end, json_edges)
   fletcher.edge(
-    label: make_label(json_edge.label.label, preamble, size: 0.7em),
+    label: make_label(json_edge.label.label, preamble, dictionnary, size: 0.7em),
     name: id_to_label(json_edge.id),
     ..args,
-    ..flags,
   )
 }
 
 
-#let make_edges(json_edges, size, preamble) = {
-  json_edges.map(e => make_edge(e, size, preamble))
+#let make_edges(json_edges, size, preamble, dictionnary) = {
+  json_edges.map(e => make_edge(e, size, preamble, dictionnary, json_edges))
 }

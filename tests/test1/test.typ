@@ -1,3 +1,17 @@
-#import "/src/lib.typ" as my-package
+#import "../../src/lib.typ" as yade
 
-Hello World
+#set page(width: auto, height:auto, margin: 0%)
+
+#show : yade.yade.with(debug:true)
+
+```yade
+{"graph":{"activeTabId":0,"latexPreamble":"\\newcommand{\\coqproof}[1]{\\checkmark{}}","nextTabId":1,"tabs":[{"edges":[{"from":0,"id":6,"label":{"label":"F f","style":[],"zindex":0},"to":1},{"from":1,"id":7,"label":{"label":"F g","style":[],"zindex":0},"to":2},{"from":2,"id":8,"label":{"label":"n_{c}","style":[],"zindex":0},"to":3},{"from":1,"id":9,"label":{"label":"n_{b}","style":[],"zindex":0},"to":4},{"from":4,"id":10,"label":{"label":"G g","style":["alignment right"],"zindex":0},"to":3},{"from":0,"id":11,"label":{"label":"n_{a}","style":["alignment right"],"zindex":0},"to":5},{"from":5,"id":12,"label":{"label":"G f","style":["alignment right"],"zindex":0},"to":4}],"freehandDrawings":[],"id":0,"nextGraphId":13,"nodes":[{"id":0,"label":{"flags":[],"label":"F a","pos":[177,767],"zindex":2}},{"id":1,"label":{"flags":[],"label":"F b","pos":[295,767],"zindex":2}},{"id":2,"label":{"flags":[],"label":"F c","pos":[413,767],"zindex":2}},{"id":3,"label":{"flags":[],"label":"G c","pos":[413,885],"zindex":2}},{"id":4,"label":{"flags":[],"label":"G b","pos":[295,885],"zindex":2}},{"id":5,"label":{"flags":[],"label":"G a","pos":[177,885],"zindex":2}}],"sizeGrid":118,"title":"1"}]},"version":18}
+```
+
+```yade
+{"graph":{"activeTabId":0,"latexPreamble":"\\newcommand{\\coqproof}[1]{\\checkmark{}}","nextTabId":1,"tabs":[{"edges":[{"from":0,"id":6,"label":{"label":"F f","style":[],"zindex":0},"to":1},{"from":1,"id":7,"label":{"label":"F g","style":[],"zindex":0},"to":2},{"from":2,"id":8,"label":{"label":"n_{c}","style":[],"zindex":0},"to":3},{"from":1,"id":9,"label":{"label":"n_{b}","style":[],"zindex":0},"to":4},{"from":4,"id":10,"label":{"label":"G g","style":["alignment right"],"zindex":0},"to":3},{"from":0,"id":11,"label":{"label":"n_{a}","style":["alignment right"],"zindex":0},"to":5},{"from":5,"id":12,"label":{"label":"G f","style":["alignment right"],"zindex":0},"to":4}],"freehandDrawings":[],"id":0,"nextGraphId":13,"nodes":[{"id":0,"label":{"flags":[],"label":"F a","pos":[202,836.080322265625],"zindex":2}},{"id":1,"label":{"flags":[],"label":"F b","pos":[333,836.080322265625],"zindex":2}},{"id":2,"label":{"flags":[],"label":"F c","pos":[469,836.080322265625],"zindex":2}},{"id":3,"label":{"flags":[],"label":"G c","pos":[469,972.080322265625],"zindex":2}},{"id":4,"label":{"flags":[],"label":"G b","pos":[333,972.080322265625],"zindex":2}},{"id":5,"label":{"flags":[],"label":"G a","pos":[202,972.080322265625],"zindex":2}}],"sizeGrid":136,"title":"1"}]},"version":18}
+```
+
+```yade
+{"graph":{"activeTabId":0,"latexPreamble":"\\newcommand{\\coqproof}[1]{\\checkmark{}}","nextTabId":1,"tabs":[{"edges":[{"from":0,"id":5,"label":{"label":"f","style":["position 0.7","bend -0.2","color blue","headColor red","dashed","tail hook","head twoheads","kind double"],"zindex":1},"to":1},{"from":2,"id":6,"label":{"label":"","style":["head none"],"zindex":0},"to":3},{"from":3,"id":7,"label":{"label":"","style":["marker |","tailColor red","tail hook"],"zindex":0},"to":4},{"from":2,"id":8,"label":{"label":"","style":["bend -0.4","marker |","wavy"],"zindex":0},"to":1}],"freehandDrawings":[],"id":0,"nextGraphId":9,"nodes":[{"id":0,"label":{"flags":[],"label":"a","pos":[220,1726.080307006836],"zindex":2}},{"id":1,"label":{"flags":[],"label":"b","pos":[436,1726.080307006836],"zindex":2}},{"id":2,"label":{"flags":[],"label":"","pos":[294,1674.080322265625],"zindex":2}},{"id":3,"label":{"flags":[],"label":"","pos":[323,1745.080322265625],"zindex":2}},{"id":4,"label":{"flags":[],"label":"","pos":[460.0028409957886,1761.4317626953125],"zindex":0}}],"sizeGrid":136,"title":"1"}]},"version":18}
+```
