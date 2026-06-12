@@ -19,11 +19,15 @@
 }
 
 #let panic_parameters(value, name) = {
-  panic("Error: unknown value '" + str(value) + "' for style '" + str(name) + "'.")
+  panic(
+    "Error: unknown value '" + str(value) + "' for style '" + str(name) + "'.",
+  )
 }
 
 #let resolve-color(color) = {
-  if color == "red" {
+  if color == auto {
+    auto
+  } else if color == "red" {
     red
   } else if color == "blue" {
     blue
@@ -75,7 +79,7 @@
 
   // Reading style
   for (key, val) in json_style {
-      let s = (key, val)
+    let s = (key, val)
 
     // alignment -> side
     if key == "alignment" {
@@ -225,7 +229,11 @@
       } else if marker == "|" {
         (inherit: "|")
       } else {
-        (draw: it => { cetz.draw.content((0, 0), scale(70%, mitex.mi(raw(marker)))) })
+        (
+          draw: it => {
+            cetz.draw.content((0, 0), scale(70%, mitex.mi(raw(marker))))
+          },
+        )
       }
 
       // headColor -> marks
@@ -271,11 +279,23 @@
 #let make_end(json_edge) = (name: str(json_edge.to))
 
 #let make_edge(json_edge, size, preamble, dictionnary, json_edges) = {
-  let start = make_start(json_edge) 
-  let end = make_end(json_edge) 
-  let args = args_from_style(json_edge.label.options, size, start, end, json_edges)
+  let start = make_start(json_edge)
+  let end = make_end(json_edge)
+  let args = args_from_style(
+    json_edge.label.options,
+    size,
+    start,
+    end,
+    json_edges,
+  )
   fletcher.edge(
-    label: make_label(json_edge.label.label, preamble, dictionnary, size: 0.7em),
+    label: make_label(
+      json_edge.label.label,
+      preamble,
+      dictionnary,
+      size: 0.7em,
+      fill: resolve-color(json_edge.label.options.at("color ", default: auto)),
+    ),
     name: id_to_label(json_edge.id),
     ..args,
   )

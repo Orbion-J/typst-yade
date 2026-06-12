@@ -2,7 +2,15 @@
 
 #let id_to_label(id) = label(str(id))
 
-#let make_label(json_label, preamble, dictionary, is_text_node: false, default: none, size: 1em) = {
+#let make_label(
+  json_label,
+  preamble,
+  dictionary,
+  is_text_node: false,
+  default: none,
+  size: 1em,
+  fill: auto,
+) = {
   let content = if is_text_node {
     mitex.mitext(raw(preamble + json_label))
   } else {
@@ -15,6 +23,8 @@
       mitex.mi(raw(preamble + json_label))
     }
   }
-  set text(size: size)
+  let args = (size: size)
+  if fill != auto { args += (fill: fill) }
+  set text(..args)
   content
 }
