@@ -1,7 +1,7 @@
 #import "utils.typ": *
 #import "imports.typ": fletcher
 
-#let make_node(json_node, size_grid, preamble, dictionnary) = {
+#let make_node(json_node, size_grid, preamble, dictionnary, text_font) = {
   let x = json_node.label.pos.at(0) / size_grid * 1em
   let y = -json_node.label.pos.at(1) / size_grid * 1em
   fletcher.node(
@@ -13,12 +13,13 @@
       dictionnary,
       is_text_node: "text" in json_node.label.options,
       default: $bullet$,
+      text_font: text_font,
     ),
     name: id_to_label(json_node.id),
     weight: 0,
   )
 }
 
-#let make_nodes(json_nodes, size_grid, preamble, dictionnary) = {
-  json_nodes.map(n => make_node(n, size_grid, preamble, dictionnary))
+#let make_nodes(json_nodes, size_grid, preamble, dictionnary, text_font) = {
+  json_nodes.map(n => make_node(n, size_grid, preamble, dictionnary, text_font))
 }

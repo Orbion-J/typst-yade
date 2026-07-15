@@ -10,8 +10,10 @@
   default: none,
   size: 1em,
   fill: auto,
+  text_font: "New Computer Modern",
 ) = {
   let content = if is_text_node {
+    set text(font: text_font)
     mitex.mitext(raw(preamble + json_label))
   } else {
     if json_label == "" {
@@ -23,8 +25,8 @@
       mitex.mi(raw(preamble + json_label))
     }
   }
-  let args = (size: size)
-  if fill != auto { args += (fill: fill) }
-  set text(..args)
+  let text_args = (size: size)
+  if fill != auto { text_args += (fill: fill) }
+  set text(..text_args)
   content
 }

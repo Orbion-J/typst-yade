@@ -1,30 +1,13 @@
 #import "utils.typ": *
 #import "imports.typ": cetz, fletcher, mitex
 
-
-// /// Style analysis
-
-#let assert_parameters(s, expected_nb_param, name) = {
-  let len = s.len()
-  assert(
-    len == expected_nb_param + 1,
-    message: "Error: style '"
-      + str(name)
-      + "' expects "
-      + str(expected_nb_param)
-      + "parameters and "
-      + str(len - 1)
-      + "were given.",
-  )
-}
-
 #let panic_parameters(value, name) = {
   panic(
     "Error: unknown value '" + str(value) + "' for style '" + str(name) + "'.",
   )
 }
 
-#let resolve-color(color) = {
+#let resolve_color(color) = {
   if color == auto {
     auto
   } else if color == "red" {
@@ -58,217 +41,313 @@
   panic("Edge not found")
 }
 
-#let args_from_style(json_style, size, start, end, json_edges) = {
-  // Default args
+#let make_anchor(is_edge, pullshout, shift, start_or_end) = {
+  if not is_edge {
+    none
+  } else if pullshout != auto {
+    // let shift = pullshout.split(" ").at(start_or_end)
+    // let value = int(shift) - 50 / 100
+    // if start_or_end == 0 { (anchor: 10%) } else { none }
+    none // TODO
+  } else if shift != auto {
+    let shift = float(shift)
+    let value = (shift / 10 + 0.5) * 100%
+    (anchor: value)
+  } else {
+    none
+  }
+}
+// + (
+//   anchor: {
+//     let pullshout = find("pullshout")
+//     if pullshout != auto {
+//       let (s, t) = pullshout.split(" ")
+//       float(s) * 1%
+//     } else {
+//       let shift = find("shiftSource")
+//       if shift == auto { none } else {
+//         let shift = float(shift)
+//         let value = (shift / 10 + 0.5) * 100%
+//         value
+//       }
+//     }
+//   },
+// args.marks.at(2) = none
+//   // let shift_s = (int(s.at(1)) - 50) / 100
+//   // let shift_t = (int(s.at(2)) - 50) / 100
+//   // args.shift = (shift_s, shift_t)
+//   // let shift_s = float(s.at(1)) * 1%
+//   // let shift_t = float(s.at(2)) * 1%
+//   // args.vertices.at(0) += (anchor: shift_s)
+//   // args.vertices.at(1) += (anchor: shift_t)
+//   // args.corner = left
+
+
+#let make_args(
+  start,
+  start_is_edge,
+  end,
+  end_is_edge,
+  name,
+  label,
+  json_options,
+  size,
+) = {
+  let find(opt) = json_options.at(opt, default: auto)
+  // let refind(opt1, opt2) = {
+  //   let try = find(opt1)
+  //   if try != auto { try } else { find(opt2) }
+  // }
+
   let args = (
-    vertices: (start, end),
-    // bend: 0deg,
-    extrude: (0,),
-    label-angle: 0deg,
-    label-side: true,
-    label-pos: 50%,
-    marks: (none, none, (inherit: "head")),
-    // shift: (0, 0),
-    stroke: auto,
-    // decorations: none,
-    dash: none,
-    // corner: none,
+    //
+    // Base
+    //
+    vertices: (
+      start
+        + make_anchor(start_is_edge, find("pullshout"), find("shiftSource"), 0),
+      end + make_anchor(end_is_edge, find("pullshout"), find("shiftTarget"), 1),
+    ),
+    name: name,
+    label: label,
     corner-radius: none,
+    // corner: none,
     // outset: auto,
-  )
-
-  // Reading style
-  for (key, val) in json_style {
-    let s = (key, val)
-
-    // alignment -> side
-    if key == "alignment" {
-      assert_parameters(s, 1, "alignment")
-
-      let alignment = val
-      args.label-side = if alignment == "right" {
-        false
-      } else if alignment == "left" {
+    //
+    // Shorten if a 2-cell
+    //
+    shorten: (
+      if start_is_edge { .5em } else { 0 },
+      if end_is_edge { .5em } else { 0 },
+    ),
+    //
+    // Label
+    //
+    label-side: {
+      let alignment = find("alignment")
+      if alignment == auto or alignment == "left" {
         true
+      } else if alignment == "right" {
+        false
       } else if alignment == "over" {
         center
       } else {
         panic_parameters(alignment, "alignment")
       }
-
-      // head -> marks
-    } else if key == "head" {
-      assert_parameters(s, 1, "head")
-
-      let head = val
-      let value = if head == "none" {
+    },
+    label-pos: {
+      let pos = find("position")
+      if pos == auto { 50% } else { float(pos) }
+    },
+    label-angle: 0deg,
+    //
+    // Marks: tail, marker, head
+    //
+    marks: (
+      {
+        let tail = find("tail")
+        if tail == auto { none } else {
+          let tailColor = find("tailColor")
+          let stroke = resolve_color(tailColor)
+          let tail_class = if tail == "mapsto" {
+            "bar"
+          } else if tail == "hook" {
+            "hook"
+          } else if tail == "hookalt" {
+            "hook'"
+          } else if tail == "arrowtail" {
+            ">"
+          } else {
+            panic_parameters(tail, "tail")
+          }
+          (inherit: tail_class, stroke: stroke)
+        }
+      },
+      {
+        let marker = find("marker")
+        if marker == auto {
+          none
+        } else if marker == "\\bullet" {
+          (inherit: "circle")
+        } else if marker == "\\circ" {
+          (inherit: "circle", fill: none)
+        } else if marker == "|" {
+          (inherit: "|")
+        } else {
+          (
+            draw: it => {
+              cetz.draw.content((0, 0), scale(70%, mitex.mi(raw(marker))))
+            },
+          )
+        }
+      },
+      {
+        let head = find("head")
+        let headColor = find("headColor")
+        let stroke = resolve_color(headColor)
+        let pullshout = find("pullshout")
+        if head == "none" or pullshout != auto {
+          none
+        } else if head == auto {
+          (inherit: "head", stroke: stroke)
+        } else if head == "twoheads" {
+          (inherit: ">>", stroke: stroke)
+        } else {
+          panic_parameters(head, "head")
+        }
+      },
+    ),
+    //
+    // Stroke
+    //
+    stroke: {
+      let kind = find("kind")
+      if kind == "none" {
         none
-      } else if head == "twoheads" {
-        (inherit: ">>")
       } else {
-        panic_parameters(head, "head")
+        resolve_color(find("color "))
       }
-      args.marks.at(2) = value
-
-      // bend -> bezier
-    } else if key == "bend" {
-      assert_parameters(s, 1, "bend")
-
-      let bend = -float(s.at(1))
-      let bezier_point = (
-        (s, e) => {
-          let (xs, ys, zs) = s
-          let (xe, ye, ze) = e
-          assert(zs == 0 and ze == 0, message: "Error: non-zero z coordinate")
-          let dx = xe - xs
-          let dy = ye - ys
-          let d = calc.sqrt(dx * dx + dy * dy)
-          let xcenter = xs + dx / 2
-          let ycenter = ys + dy / 2
-          let angle = if dx != 0 { calc.atan(dy / dx) } else { 90deg }
-          let dxtop_sign = if dy > 0 { -1 } else { 1 }
-          let dytop_sign = if dx > 0 { 1 } else { -1 }
-          let dxtop = dxtop_sign * calc.abs(calc.sin(angle)) * bend * d
-          let dytop = dytop_sign * calc.abs(calc.cos(angle)) * bend * d
-          (xcenter + dxtop, ycenter + dytop, 0)
-        },
-        start,
-        end,
-      )
-      // args.bezier = (bezier_point,)
-
-      // kind -> extrude, stroke
-    } else if key == "kind" {
-      assert_parameters(s, 1, "kind")
-
-      let kind = val
-      if kind == "double" {
-        args.extrude = (-1.5, 1.5)
-        // args.outset = (0.3em, 0.3em)
-      } else if kind == "none" {
-        args.stroke = none
+    },
+    //
+    // Extrude
+    //
+    extrude: {
+      let kind = find("kind")
+      if kind == auto or kind == "none" {
+        (0,)
+      } else if kind == "double" {
+        (-1.5, 1.5)
       } else {
         panic_parameters(kind, "kind")
       }
-
-      // shiftSource -> shift
-    } else if key == "shiftSource" {
-      assert_parameters(s, 1, "shiftSource")
-
-      let shiftSource = float(s.at(1))
-      let value = (shiftSource / 10 + 0.5) * 100%
-      // let value = shiftSource / size
-      // args.shift.at(0) = value
-      args.vertices.at(0) += (anchor: value)
-
-      // shiftTarget -> shift
-    } else if key == "shiftTarget" {
-      assert_parameters(s, 1, "shiftTarget")
-
-      let shiftTarget = float(s.at(1))
-      let value = (shiftTarget / 10 + 0.5) * 100%
-      // let value = shiftTarget / size * 2
-      // args.shift.at(1) = value
-      args.vertices.at(1) += (anchor: value)
-
-      // adjunction -> stroke, label-angle
-    } else if key == "adjunction" {
-      assert_parameters(s, 0, "adjunction")
-
-      args.stroke = none
-      args.label-angle = right
-
-      // color -> stroke
-    } else if key == "color " {
-      assert_parameters(s, 1, "color")
-
-      args.stroke = resolve-color(s.at(1))
-
-      // position -> label-pos
-    } else if key == "position" {
-      assert_parameters(s, 1, "position")
-
-      args.label-pos = float(s.at(1))
-
-      // wavy -> decorations
-    } else if key == "wavy" {
-      assert_parameters(s, 0, "wavy")
-      // flags.push(wave)
-      // TODO ??
-
-      // dashed -> dash
-    } else if key == "dashed" {
-      if val == true {
-        args.dash = "dashed"
-      }
-      // tail -> marks
-    } else if key == "tail" {
-      assert_parameters(s, 1, "tail")
-
-      let tail = val
-      let value = if tail == "mapsto" {
-        "bar"
-      } else if tail == "hook" {
-        "hook"
-      } else if tail == "hookalt" {
-        "hook'"
+    },
+    //
+    // Dash
+    //
+    dash: {
+      let dashed = find("dashed")
+      if dashed == true {
+        "dashed"
       } else {
-        panic_parameters(tail, "tail")
+        none
       }
-      args.marks.at(0) += (inherit: value)
-
-      // marker -> marks
-    } else if key == "marker" {
-      assert_parameters(s, 1, "marker")
-
-      let marker = val
-      args.marks.at(1) = if marker == "\\bullet" {
-        (inherit: "circle")
-      } else if marker == "\\circ" {
-        (inherit: "circle", fill: none)
-      } else if marker == "|" {
-        (inherit: "|")
+    },
+    //
+    // shift: (0, 0),
+    decorate: {
+      let wavy = find("wavy")
+      if wavy == true {
+        (kind: "zigzag", shorten: 1)
       } else {
-        (
-          draw: it => {
-            cetz.draw.content((0, 0), scale(70%, mitex.mi(raw(marker))))
+        auto
+      }
+    },
+  )
+
+
+  // OPTIONAL ADDITIONAL ARGUMENTS
+
+  // Bend (Bezier curve)
+  let bend = find("bend")
+  if bend != auto {
+    args += (
+      bezier: {
+        let bend = -float(bend)
+        let bezier_point = (
+          (s, e) => {
+            let (xs, ys, zs) = s
+            let (xe, ye, ze) = e
+            assert(zs == 0 and ze == 0, message: "Error: non-zero z coordinate")
+            let dx = xe - xs
+            let dy = ye - ys
+            let d = calc.sqrt(dx * dx + dy * dy)
+            let xcenter = xs + dx / 2
+            let ycenter = ys + dy / 2
+            let angle = if dx != 0 { calc.atan(dy / dx) } else { 90deg }
+            let dxtop_sign = if dy > 0 { -1 } else { 1 }
+            let dytop_sign = if dx > 0 { 1 } else { -1 }
+            let dxtop = dxtop_sign * calc.abs(calc.sin(angle)) * bend * d
+            let dytop = dytop_sign * calc.abs(calc.cos(angle)) * bend * d
+            (xcenter + dxtop, ycenter + dytop, 0)
           },
+          start,
+          end,
         )
-      }
-
-      // headColor -> marks
-    } else if key == "headColor" {
-      assert_parameters(s, 1, "headColor")
-
-      args.marks.at(2) += (stroke: resolve-color(val))
-
-      // tailColor -> marks
-    } else if key == "tailColor" {
-      assert_parameters(s, 1, "tailColor")
-
-      args.marks.at(0) += (stroke: resolve-color(val))
-
-      // pullshout -> corner (pas ouf)
-    } else if key == "pullshout" {
-      assert_parameters(s, 2, "pullshout")
-      args.marks.at(2) = none
-      // let shift_s = (int(s.at(1)) - 50) / 100
-      // let shift_t = (int(s.at(2)) - 50) / 100
-      // args.shift = (shift_s, shift_t)
-      // let shift_s = float(s.at(1)) * 1%
-      // let shift_t = float(s.at(2)) * 1%
-      // args.vertices.at(0) += (anchor: shift_s)
-      // args.vertices.at(1) += (anchor: shift_t)
-      // args.corner = left
-
-      let root = make_start(find_edge(start, json_edge))
-
-      // Unknown style
-    } else {
-      panic("Error: Unrecognized style '" + key + "'.")
-    }
+        (bezier_point,)
+      },
+    )
   }
 
+  // Corner for pullshout
+  let pullshout = find("pullshout")
+  if pullshout != auto {
+    args += (corner: "-|")
+  }
+  // } else if key == "shiftSource" {
+  //     //assert_parameters(s, 1, "shiftSource")
+  //
+  //     let shiftSource = float(s.at(1))
+  //     let value = (shiftSource / 10 + 0.5) * 100%
+  //     // let value = shiftSource / size
+  //     // args.shift.at(0) = value
+  //     args.vertices.at(0) += (anchor: value)
+  //
+  //     // shiftTarget -> shift
+  //   } else if key == "shiftTarget" {
+  //     //assert_parameters(s, 1, "shiftTarget")
+  //
+  //     let shiftTarget = float(s.at(1))
+  //     let value = (shiftTarget / 10 + 0.5) * 100%
+  //     // let value = shiftTarget / size * 2
+  //     // args.shift.at(1) = value
+  //     args.vertices.at(1) += (anchor: value)
+  //
+  // } else if key == "pullshout" {
+  //   //assert_parameters(s, 2, "pullshout")
+  //   // args.marks.at(2) = none
+  //   // let shift_s = (int(s.at(1)) - 50) / 100
+  //   // let shift_t = (int(s.at(2)) - 50) / 100
+  //   // args.shift = (shift_s, shift_t)
+  //   // let shift_s = float(s.at(1)) * 1%
+  //   // let shift_t = float(s.at(2)) * 1%
+  //   // args.vertices.at(0) += (anchor: shift_s)
+  //   // args.vertices.at(1) += (anchor: shift_t)
+  //   // args.corner = left
+  //
+  //   let root = make_start(find_edge(start, json_edge))
+
+
+  // Checking for unknown option
+  let known_options = (
+    "alignment",
+    "head",
+    "bend",
+    "kind",
+    "shiftSource",
+    "shiftTarget",
+    "adjunction",
+    "color ",
+    "position",
+    "wavy",
+    "dashed",
+    "tail",
+    "marker",
+    "headColor",
+    "tailColor",
+    "pullshout",
+    "labelColor",
+  )
+  for (key, _) in json_options {
+    if key not in known_options {
+      panic(
+        "Error: Unrecognized option '"
+          + key
+          + "' with value '"
+          + str(value)
+          + "'.",
+      )
+    }
+  }
 
   return args
 }
@@ -278,30 +357,59 @@
 #let make_start(json_edge) = (name: str(json_edge.from))
 #let make_end(json_edge) = (name: str(json_edge.to))
 
-#let make_edge(json_edge, size, preamble, dictionnary, json_edges) = {
+#let make_edge(json_edge, size, preamble, dictionnary, json_edges, id_edges) = {
   let start = make_start(json_edge)
+  let start_is_edge = json_edge.from in id_edges
+
   let end = make_end(json_edge)
-  let args = args_from_style(
+  let end_is_edge = json_edge.to in id_edges
+
+  let name = id_to_label(json_edge.id)
+
+  let label = make_label(
+    json_edge.label.label,
+    preamble,
+    dictionnary,
+    size: 0.7em,
+    fill: resolve_color(json_edge.label.options.at(
+      "labelColor",
+      default: auto,
+    )),
+  )
+
+  let args = make_args(
+    start,
+    start_is_edge,
+    end,
+    end_is_edge,
+    name,
+    label,
     json_edge.label.options,
     size,
-    start,
-    end,
-    json_edges,
   )
-  fletcher.edge(
-    label: make_label(
-      json_edge.label.label,
-      preamble,
-      dictionnary,
-      size: 0.7em,
-      fill: resolve-color(json_edge.label.options.at("color ", default: auto)),
-    ),
-    name: id_to_label(json_edge.id),
-    ..args,
-  )
+  fletcher.edge(..args)
+  // json_edges,
+  //   label: make_label(
+  //     json_edge.label.label,
+  //     preamble,
+  //     dictionnary,
+  //     size: 0.7em,
+  //     // fill: resolve_color(json_edge.label.options.at("color ", default: auto)),
+  //   ),
+  //   name: id_to_label(json_edge.id),
+  //   ..args,
+  // )
 }
 
 
 #let make_edges(json_edges, size, preamble, dictionnary) = {
-  json_edges.map(e => make_edge(e, size, preamble, dictionnary, json_edges))
+  let id_edges = json_edges.map(e => e.id)
+  json_edges.map(e => make_edge(
+    e,
+    size,
+    preamble,
+    dictionnary,
+    json_edges,
+    id_edges,
+  ))
 }
