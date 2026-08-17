@@ -32,24 +32,17 @@
 }
 
 
-#let find_edge(x, json_edges) = {
+#let find_edge(id, json_edges) = {
   for edge in json_edges {
-    if edge.id == x.name {
+    if edge.id == id {
       return edge
     }
   }
   panic("Edge not found")
 }
 
-#let make_anchor(is_edge, pullshout, shift, start_or_end) = {
-  if not is_edge {
-    none
-  } else if pullshout != auto {
-    // let shift = pullshout.split(" ").at(start_or_end)
-    // let value = int(shift) - 50 / 100
-    // if start_or_end == 0 { (anchor: 10%) } else { none }
-    none // TODO
-  } else if shift != auto {
+#let make_anchor(is_edge, shift) = {
+  if is_edge and shift != auto {
     let shift = float(shift)
     let value = (shift / 10 + 0.5) * 100%
     (anchor: value)
@@ -57,31 +50,6 @@
     none
   }
 }
-// + (
-//   anchor: {
-//     let pullshout = find("pullshout")
-//     if pullshout != auto {
-//       let (s, t) = pullshout.split(" ")
-//       float(s) * 1%
-//     } else {
-//       let shift = find("shiftSource")
-//       if shift == auto { none } else {
-//         let shift = float(shift)
-//         let value = (shift / 10 + 0.5) * 100%
-//         value
-//       }
-//     }
-//   },
-// args.marks.at(2) = none
-//   // let shift_s = (int(s.at(1)) - 50) / 100
-//   // let shift_t = (int(s.at(2)) - 50) / 100
-//   // args.shift = (shift_s, shift_t)
-//   // let shift_s = float(s.at(1)) * 1%
-//   // let shift_t = float(s.at(2)) * 1%
-//   // args.vertices.at(0) += (anchor: shift_s)
-//   // args.vertices.at(1) += (anchor: shift_t)
-//   // args.corner = left
-
 
 #let make_args(
   start,
@@ -94,35 +62,26 @@
   size,
 ) = {
   let find(opt) = json_options.at(opt, default: auto)
-  // let refind(opt1, opt2) = {
-  //   let try = find(opt1)
-  //   if try != auto { try } else { find(opt2) }
-  // }
 
   let args = (
-    //
     // Base
-    //
     vertices: (
-      start
-        + make_anchor(start_is_edge, find("pullshout"), find("shiftSource"), 0),
-      end + make_anchor(end_is_edge, find("pullshout"), find("shiftTarget"), 1),
+      start + make_anchor(start_is_edge, find("shiftSource")),
+      end + make_anchor(end_is_edge, find("shiftTarget")),
     ),
     name: name,
     label: label,
     corner-radius: none,
     // corner: none,
     // outset: auto,
-    //
+
     // Shorten if a 2-cell
-    //
     shorten: (
       if start_is_edge { .5em } else { 0 },
       if end_is_edge { .5em } else { 0 },
     ),
-    //
+
     // Label
-    //
     label-side: {
       let alignment = find("alignment")
       if alignment == auto or alignment == "left" {
@@ -140,9 +99,8 @@
       if pos == auto { 50% } else { float(pos) }
     },
     label-angle: 0deg,
-    //
+
     // Marks: tail, marker, head
-    //
     marks: (
       {
         let tail = find("tail")
@@ -197,9 +155,8 @@
         }
       },
     ),
-    //
-    // Stroke
-    //
+
+    // Stroke: no stroke or color
     stroke: {
       let kind = find("kind")
       if kind == "none" {
@@ -208,9 +165,8 @@
         resolve_color(find("color "))
       }
     },
-    //
+
     // Extrude
-    //
     extrude: {
       let kind = find("kind")
       if kind == auto or kind == "none" {
@@ -221,9 +177,8 @@
         panic_parameters(kind, "kind")
       }
     },
-    //
+
     // Dash
-    //
     dash: {
       let dashed = find("dashed")
       if dashed == true {
@@ -232,8 +187,8 @@
         none
       }
     },
-    //
-    // shift: (0, 0),
+
+    // Waves
     decorate: {
       let wavy = find("wavy")
       if wavy == true {
@@ -243,7 +198,6 @@
       }
     },
   )
-
 
   // OPTIONAL ADDITIONAL ARGUMENTS
 
@@ -277,45 +231,6 @@
       },
     )
   }
-
-  // Corner for pullshout
-  let pullshout = find("pullshout")
-  if pullshout != auto {
-    args += (corner: "-|")
-  }
-  // } else if key == "shiftSource" {
-  //     //assert_parameters(s, 1, "shiftSource")
-  //
-  //     let shiftSource = float(s.at(1))
-  //     let value = (shiftSource / 10 + 0.5) * 100%
-  //     // let value = shiftSource / size
-  //     // args.shift.at(0) = value
-  //     args.vertices.at(0) += (anchor: value)
-  //
-  //     // shiftTarget -> shift
-  //   } else if key == "shiftTarget" {
-  //     //assert_parameters(s, 1, "shiftTarget")
-  //
-  //     let shiftTarget = float(s.at(1))
-  //     let value = (shiftTarget / 10 + 0.5) * 100%
-  //     // let value = shiftTarget / size * 2
-  //     // args.shift.at(1) = value
-  //     args.vertices.at(1) += (anchor: value)
-  //
-  // } else if key == "pullshout" {
-  //   //assert_parameters(s, 2, "pullshout")
-  //   // args.marks.at(2) = none
-  //   // let shift_s = (int(s.at(1)) - 50) / 100
-  //   // let shift_t = (int(s.at(2)) - 50) / 100
-  //   // args.shift = (shift_s, shift_t)
-  //   // let shift_s = float(s.at(1)) * 1%
-  //   // let shift_t = float(s.at(2)) * 1%
-  //   // args.vertices.at(0) += (anchor: shift_s)
-  //   // args.vertices.at(1) += (anchor: shift_t)
-  //   // args.corner = left
-  //
-  //   let root = make_start(find_edge(start, json_edge))
-
 
   // Checking for unknown option
   let known_options = (
@@ -353,16 +268,86 @@
 }
 
 
+#let make_start_end(json_edge, size, json_edges, id_edges, pullshout_info) = {
+  if pullshout_info == none {
+    // Not a pullshout edge
+
+    let start = (name: str(json_edge.from))
+    let end = (name: str(json_edge.to))
+    let start_is_edge = json_edge.from in id_edges
+    let end_is_edge = json_edge.to in id_edges
+    (start, start_is_edge, end, end_is_edge)
+  } else {
+    // A pullshout edge
+
+    let start_pullshout = (
+      name: str(json_edge.from),
+      anchor: pullshout_info.s * 1/size * 1em,
+    )
+    let end_pullshout = (
+      name: str(json_edge.to),
+      anchor: pullshout_info.t * 1 /size * 1em,
+    )
+
+    // find the root (common point)
+    let root = {
+      let start_edge = find_edge(json_edge.from, json_edges)
+      let end_edge = find_edge(json_edge.to, json_edges)
+      let root_id = if start_edge.to in (end_edge.to, end_edge.from) {
+        start_edge.to
+      } else if start_edge.from in (end_edge.to, end_edge.from) {
+        start_edge.from
+      } else { panic("Error: pullshout ill-formed") }
+      (name: str(root_id))
+    }
+
+    // compute the middle point of the pullshout angle (using cetz resolved coordinates)
+    let middle = (
+      (s, e, r) => {
+        let r_to_s = cetz.vector.sub(s, r)
+        let r_to_e = cetz.vector.sub(e, r)
+        let r_to_m = cetz.vector.add(r_to_s, r_to_e)
+        let m = cetz.vector.add(r, r_to_m)
+        m
+      },
+      start_pullshout,
+      end_pullshout,
+      root,
+    )
+
+    if pullshout_info.kind == "start" {
+      let start = start_pullshout
+      let end = middle
+      let start_is_edge = true
+      let end_is_edge = false
+      (start, start_is_edge, end, end_is_edge)
+    } else {
+      let start = middle
+      let end = end_pullshout
+      let start_is_edge = false
+      let end_is_edge = true
+      (start, start_is_edge, end, end_is_edge)
+    }
+  }
+}
+
 // /// Draw edge
-#let make_start(json_edge) = (name: str(json_edge.from))
-#let make_end(json_edge) = (name: str(json_edge.to))
-
-#let make_edge(json_edge, size, preamble, dictionnary, json_edges, id_edges) = {
-  let start = make_start(json_edge)
-  let start_is_edge = json_edge.from in id_edges
-
-  let end = make_end(json_edge)
-  let end_is_edge = json_edge.to in id_edges
+#let make_edge(
+  json_edge,
+  size,
+  preamble,
+  dictionnary,
+  json_edges,
+  id_edges,
+  pullshout_info,
+) = {
+  let (start, start_is_edge, end, end_is_edge) = make_start_end(
+    json_edge,
+    size,
+    json_edges,
+    id_edges,
+    pullshout_info,
+  )
 
   let name = id_to_label(json_edge.id)
 
@@ -388,28 +373,40 @@
     size,
   )
   fletcher.edge(..args)
-  // json_edges,
-  //   label: make_label(
-  //     json_edge.label.label,
-  //     preamble,
-  //     dictionnary,
-  //     size: 0.7em,
-  //     // fill: resolve_color(json_edge.label.options.at("color ", default: auto)),
-  //   ),
-  //   name: id_to_label(json_edge.id),
-  //   ..args,
-  // )
 }
 
 
 #let make_edges(json_edges, size, preamble, dictionnary) = {
   let id_edges = json_edges.map(e => e.id)
-  json_edges.map(e => make_edge(
-    e,
-    size,
-    preamble,
-    dictionnary,
-    json_edges,
-    id_edges,
-  ))
+
+  // For each edge, if its a pullshout, insert two edges
+  let edges_with_pullshout = ()
+  for e in json_edges {
+    let pullshout_option = e.label.options.at("pullshout", default: none)
+    if pullshout_option != none {
+      let (s, t) = pullshout_option.split(" ")
+      edges_with_pullshout.push((
+        edge: e,
+        pullshout: (kind: "start", s: float(s), t: float(t)),
+      ))
+      edges_with_pullshout.push((
+        edge: e,
+        pullshout: (kind: "end", s: float(s), t: float(t)),
+      ))
+    } else {
+      edges_with_pullshout.push((edge: e, pullshout: none))
+    }
+  }
+
+  edges_with_pullshout.map(ewp => {
+    make_edge(
+      ewp.edge,
+      size,
+      preamble,
+      dictionnary,
+      json_edges,
+      id_edges,
+      ewp.pullshout,
+    )
+  })
 }
