@@ -205,7 +205,7 @@
   let bend = find("bend")
   if bend != auto {
     args += (
-      bezier: {
+      ctrl-pts: {
         let bend = -float(bend)
         let bezier_point = (
           (s, e) => {
