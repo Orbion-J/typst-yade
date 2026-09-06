@@ -6,7 +6,7 @@
 // #let base_scale = .05 // à vue de nez
 #let supported_yade_version = 20
 
-#let src_diagram(diagram, dictionary, text_font, scale: 1) = {
+#let _nodes_and_edges_args(diagram, dictionary, text_font, scale: 1) = {
   let json_diagram = if type(diagram) == dictionary {
     diagram
   } else if type(diagram) == content and diagram.func() == raw {
@@ -51,12 +51,18 @@
   )
 }
 
-#let make_diagram(diagram, dictionary, text_font, scale: 1, debug: false) = {
-  let src = src_diagram(diagram, dictionary, text_font, scale: scale)
+#let _nodes_and_edges(diagram, dictionary, text_font, scale: 1) = {
+  let args = _nodes_and_edges_args(diagram, dictionary, text_font, scale: scale)
+  (
+    ..args.nodes.map(n => fletcher.node(..n)),
+    ..args.edges.map(e => fletcher.edge(..e)),
+  )
+}
+
+#let _diagram(diagram, dictionary, text_font, scale: 1, debug: false) = {
   fletcher.diagram(
     debug: debug,
-    ..src.nodes.map(n => fletcher.node(..n)),
-    ..src.edges.map(e => fletcher.edge(..e)),
+    _nodes_and_edges(diagram, dictionary, text_font, scale: scale)
   )
 }
 
@@ -66,14 +72,21 @@
   text_font: "New Computer Modern",
   scale: 1,
   debug: false,
-) = make_diagram(diagram, dictionary, text_font, scale: scale, debug: debug)
+) = _diagram(diagram, dictionary, text_font, scale: scale, debug: debug)
 
 #let nodes_and_edges(
   diagram,
   dictionary: (:),
   text_font: "New Computer Modern",
   scale: 1,
-) = src_diagram(diagram, dictionary, text_font, scale: scale)
+) = _nodes_and_edges(diagram, dictionary, text_font, scale: scale)
+
+#let nodes_and_edges_args(
+  diagram,
+  dictionary: (:),
+  text_font: "New Computer Modern",
+  scale: 1,
+) = _nodes_and_edges_args(diagram, dictionary, text_font, scale: scale)
 
 #let nodes_and_edges_metadata(
   diagram,
@@ -81,14 +94,14 @@
   text_font: "New Computer Modern",
   scale: 1,
 ) = {
-  let nodes_and_edges = nodes_and_edges(
+  let args = nodes_and_edges_args(
     diagram,
     dictionary: dictionary,
     text_font: text_font,
     scale: scale,
   )
   let output = ""
-  for n in nodes_and_edges.nodes {
+  for n in args.nodes {
     let x = str(repr(n))
     x = x.replace("\n", "").replace("  ", " ").replace("( ", "(")
     x = x.replace("arguments", "node")
@@ -97,7 +110,7 @@
       .replace("]), ..)", "]")
     output += x + ", "
   }
-  for e in nodes_and_edges.edges {
+  for e in args.edges {
     let x = str(repr(e))
     x = x.replace("\n", "").replace("  ", " ").replace("( ", "(")
     x = x
@@ -134,7 +147,7 @@
   }
   show raw.where(lang: "yade"): it => {
     set text(size)
-    make_diagram(it, dictionary, text_font, scale: scale, debug: debug)
+    _diagram(it, dictionary, text_font, scale: scale, debug: debug)
   }
   body
 }
