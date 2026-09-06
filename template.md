@@ -1,14 +1,6 @@
 
 ## Template adaptation checklist
 
-- [ ] Fill out `README.md`
-  - Change the `my-package` package name, including code snippets
-  - Check section contents and/or delete sections that don't apply
-- [ ] Check and/or replace `LICENSE` by something that suits your needs
-- [ ] Fill out `typst.toml`
-  - See also the [typst/packages README](https://github.com/typst/packages/?tab=readme-ov-file#package-format)
-- [ ] Adapt Repository URLs in `CHANGELOG.md`
-  - Consider only committing that file with your first release, or removing the "Initial Release" part in the beginning
 - [ ] Adapt or deactivate the release workflow in `.github/workflows/release.yml`
   - to deactivate it, delete that file or remove/comment out lines 2-4 (`on:` and following)
   - to use the workflow
@@ -17,5 +9,4 @@
     - [ ] on this repo, create a secret `REGISTRY_TOKEN` (at `https://github.com/[user]/[repo]/settings/secrets/actions`) that contains the so created token
 
     if configured correctly, whenever you create a tag `v...`, your package will be pushed onto a branch on the `REGISTRY_REPO`, from which you can then create a pull request against [typst/packages](https://github.com/typst/packages/)
-- [ ] remove this section from the README
 
