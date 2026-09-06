@@ -4,7 +4,7 @@
 #let make_node(json_node, size_grid, preamble, dictionnary, text_font) = {
   let x = json_node.label.pos.at(0) / size_grid * 1em
   let y = -json_node.label.pos.at(1) / size_grid * 1em
-  fletcher.node(
+  arguments(
     (x, y),
     // pos: (x, y),
     body: make_label(

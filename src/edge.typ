@@ -59,9 +59,10 @@
   name,
   label,
   json_options,
+  zindex,
   size,
 ) = {
-  let find(opt) = json_options.at(opt, default: auto)
+  let find(opt, default: auto) = json_options.at(opt, default: default)
 
   let args = (
     // Base
@@ -72,8 +73,8 @@
     name: name,
     label: label,
     corner-radius: none,
-    // corner: none,
-    // outset: auto,
+    layer: zindex,
+    crossing: true, // not supported by fletcher yet it seems
 
     // Shorten if a 2-cell
     shorten: (
@@ -204,32 +205,34 @@
   // Bend (Bezier curve)
   let bend = find("bend")
   if bend != auto {
+    let bend = -float(bend)
+    let bezier_point_func = (s, e) => {
+      let (xs, ys, zs) = s
+      let (xe, ye, ze) = e
+      assert(zs == 0 and ze == 0, message: "Error: non-zero z coordinate")
+      let dx = xe - xs
+      let dy = ye - ys
+      let d = calc.sqrt(dx * dx + dy * dy)
+      let xcenter = xs + dx / 2
+      let ycenter = ys + dy / 2
+      let angle = if dx != 0 { calc.atan(dy / dx) } else { 90deg }
+      let dxtop_sign = if dy > 0 { -1 } else { 1 }
+      let dytop_sign = if dx > 0 { 1 } else { -1 }
+      let dxtop = dxtop_sign * calc.abs(calc.sin(angle)) * bend * d
+      let dytop = dytop_sign * calc.abs(calc.cos(angle)) * bend * d
+      (xcenter + dxtop, ycenter + dytop, 0)
+    }
+
     args += (
-      ctrl-pts: {
-        let bend = -float(bend)
-        let bezier_point = (
-          (s, e) => {
-            let (xs, ys, zs) = s
-            let (xe, ye, ze) = e
-            assert(zs == 0 and ze == 0, message: "Error: non-zero z coordinate")
-            let dx = xe - xs
-            let dy = ye - ys
-            let d = calc.sqrt(dx * dx + dy * dy)
-            let xcenter = xs + dx / 2
-            let ycenter = ys + dy / 2
-            let angle = if dx != 0 { calc.atan(dy / dx) } else { 90deg }
-            let dxtop_sign = if dy > 0 { -1 } else { 1 }
-            let dytop_sign = if dx > 0 { 1 } else { -1 }
-            let dxtop = dxtop_sign * calc.abs(calc.sin(angle)) * bend * d
-            let dytop = dytop_sign * calc.abs(calc.cos(angle)) * bend * d
-            (xcenter + dxtop, ycenter + dytop, 0)
-          },
-          start,
-          end,
-        )
-        (bezier_point,)
-      },
+      draw: ((a, b)) => cetz.draw.bezier(a, b, bezier_point_func(a, b)),
     )
+  }
+
+  // Loop
+  let loopRadius = find("loopRadius")
+  if loopRadius != auto {
+    let loopAngle = find("loopAngle", default: 0)
+    args += (loop: loopRadius / size / 2, loop-angle: -loopAngle * 1rad)
   }
 
   // Checking for unknown option
@@ -251,8 +254,10 @@
     "tailColor",
     "pullshout",
     "labelColor",
+    "loopAngle",
+    "loopRadius",
   )
-  for (key, _) in json_options {
+  for (key, value) in json_options {
     if key not in known_options {
       panic(
         "Error: Unrecognized option '"
@@ -282,11 +287,11 @@
 
     let start_pullshout = (
       name: str(json_edge.from),
-      anchor: pullshout_info.s * 1/size * 1em,
+      anchor: pullshout_info.s * 1 / size * 1em,
     )
     let end_pullshout = (
       name: str(json_edge.to),
-      anchor: pullshout_info.t * 1 /size * 1em,
+      anchor: pullshout_info.t * 1 / size * 1em,
     )
 
     // find the root (common point)
@@ -370,9 +375,11 @@
     name,
     label,
     json_edge.label.options,
+    json_edge.label.zindex,
     size,
   )
-  fletcher.edge(..args)
+
+  args
 }
 
 
