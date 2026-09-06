@@ -11,8 +11,10 @@
     diagram
   } else if type(diagram) == content and diagram.func() == raw {
     json(bytes(diagram.text))
+  } else if type(diagram) == path {
+    json(diagram)
   } else {
-    panic("Unsupported diagram description. Input should be of type dict or content/raw but is of type " + str(type(diagram)))
+    panic("Unsupported diagram description. Input should be of type dict, content/raw or path but is of type " + str(type(diagram)))
   }
   let version = json_diagram.version
   if version < supported_yade_version {
