@@ -27,7 +27,6 @@ keywords = [
 	"yade",
 ]
 disciplines = []
-compiler = ""
 exclude = [
   ".github",
   "docs",

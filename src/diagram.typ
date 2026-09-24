@@ -14,7 +14,10 @@
   } else if type(diagram) == path {
     json(diagram)
   } else {
-    panic("Unsupported diagram description. Input should be of type dict, content/raw or path but is of type " + str(type(diagram)))
+    panic(
+      "Unsupported diagram description. Input should be of type dict, content/raw or path but is of type "
+        + str(type(diagram)),
+    )
   }
   let version = json_diagram.version
   if version < supported_yade_version {
@@ -62,7 +65,7 @@
 #let _diagram(diagram, dictionary, text_font, scale: 1, debug: false) = {
   fletcher.diagram(
     debug: debug,
-    _nodes_and_edges(diagram, dictionary, text_font, scale: scale)
+    _nodes_and_edges(diagram, dictionary, text_font, scale: scale),
   )
 }
 
@@ -142,8 +145,10 @@
   // to compensate the fact that text size in raw is by defaut 0.8em => no very robust, better solution above? (breaks preview)
   let size = if size == auto {
     1.25em
-  } else {
+  } else if type(size) == length {
     size
+  } else {
+    size * 1.25em
   }
   show raw.where(lang: "yade"): it => {
     set text(size)
