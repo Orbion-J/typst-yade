@@ -77,10 +77,18 @@
     crossing: true, // not supported by fletcher yet it seems
 
     // Shorten if a 2-cell
-    shorten: (
-      if start_is_edge { .5em } else { 0 },
-      if end_is_edge { .5em } else { 0 },
-    ),
+    shorten: {
+      let shortenHead = find("shortenHead")
+      let shortenTail = find("shortenTail")
+      (
+        if shortenTail == auto {
+          if start_is_edge { .5em } else { 0 }
+        } else { float(shortenTail) / size * 1em },
+        if shortenHead == auto {
+          if end_is_edge { .5em } else { 0 }
+        } else { float(shortenHead) / size * 1em },
+      )
+    },
 
     // Label
     label-side: {
@@ -256,6 +264,8 @@
     "labelColor",
     "loopAngle",
     "loopRadius",
+    "shortenTail",
+    "shortenHead",
   )
   for (key, value) in json_options {
     if key not in known_options {
