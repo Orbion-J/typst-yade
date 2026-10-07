@@ -242,7 +242,7 @@
     }
 
     args += (
-      draw: ((a, b)) => cetz.draw.bezier(a, b, bezier_point_func(a, b)),
+      path: ((a, b)) => cetz.draw.bezier(a, b, bezier_point_func(a, b)),
     )
   }
 
