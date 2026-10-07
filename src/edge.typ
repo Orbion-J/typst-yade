@@ -7,27 +7,29 @@
   )
 }
 
-#let resolve_color(color) = {
-  if color == auto {
+#let resolve_color(c) = {
+  if c == auto {
     auto
-  } else if color == "red" {
+  } else if type(c) == color {
+    c
+  } else if c == "red" {
     red
-  } else if color == "blue" {
+  } else if c == "blue" {
     blue
-  } else if color == "purple" {
+  } else if c == "purple" {
     purple
-  } else if color == "green" {
+  } else if c == "green" {
     green
-  } else if color == "orange" {
+  } else if c == "orange" {
     orange
-  } else if color == "yellow" {
+  } else if c == "yellow" {
     yellow
-  } else if color == "gray" {
+  } else if c == "gray" {
     gray
-  } else if color == "black" {
+  } else if c == "black" {
     black
   } else {
-    panic("Error: unrecognized color '" + color + "'.")
+    panic("Error: unrecognized c '" + color + "'.")
   }
 }
 
@@ -64,14 +66,22 @@
 ) = {
   let find(opt, default: auto) = json_options.at(opt, default: default)
 
+  let edge_color = resolve_color(find("color "))
+
   let args = (
     // Base
-    vertices: (
-      start + make_anchor(start_is_edge, find("shiftSource")),
-      end + make_anchor(end_is_edge, find("shiftTarget")),
-    ),
+    vertices: {
+      if start == end {
+        (start + make_anchor(start_is_edge, find("shiftSource")), auto)
+      } else {
+        (
+          start + make_anchor(start_is_edge, find("shiftSource")),
+          end + make_anchor(end_is_edge, find("shiftTarget")),
+        )
+      }
+    },
     name: name,
-    label: label,
+    label: label(edge_color),
     corner-radius: none,
     layer: zindex,
     crossing: true, // not supported by fletcher yet it seems
@@ -171,7 +181,7 @@
       if kind == "none" {
         none
       } else {
-        resolve_color(find("color "))
+        edge_color
       }
     },
 
@@ -240,7 +250,7 @@
   let loopRadius = find("loopRadius")
   if loopRadius != auto {
     let loopAngle = find("loopAngle", default: 0)
-    args += (loop: loopRadius / size / 2, loop-angle: -loopAngle * 1rad)
+    args += (size: loopRadius / size, loop: -loopAngle * 1rad)
   }
 
   // Checking for unknown option
@@ -366,15 +376,12 @@
 
   let name = id_to_label(json_edge.id)
 
-  let label = make_label(
+  let label(edge_color) = make_label(
     json_edge.label.label,
     preamble,
     dictionnary,
     size: 0.7em,
-    fill: resolve_color(json_edge.label.options.at(
-      "labelColor",
-      default: auto,
-    )),
+    fill: resolve_color(json_edge.label.options.at("labelColor", default: edge_color)),
   )
 
   let args = make_args(
