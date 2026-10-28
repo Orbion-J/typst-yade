@@ -83,8 +83,9 @@ The three functions have the following options allowing to customize the appeara
 - `text_font` the font for text nodes (default `"New Computer Modern"`) [`yade`, `diagram`, `nodes_and_edges`]
 - `size` text size (default `auto`) [`yade`]
 - `scale` a scaling level applied to the structure of the diagram (not to the text). Can be a number or `none` to disable the default scaling (default `1`) [`yade`, `diagram`, `nodes_and_edges`]
-- `debug` the level of debug you want to display. See `flecther`'s debug option (default `false`) [`yade`, `diagram`]
-- `dictionary` a dictionary of pairs `key: content`. Labels of nodes and edges of the form `typ:key` are interpreted as `content` [`yade`, `diagram`, `nodes_and_edges`]
+- `debug` the level of debug you want to display. See `fletcher`'s debug option (default `false`) [`yade`, `diagram`]
+- `dictionary` a dictionary of pairs `<key>: <content>`. Labels of nodes and edges of the form `typ:<key>` are interpreted as `<content>` [`yade`, `diagram`, `nodes_and_edges`]
+- `extra` a dictionary of pairs `"<id>": (<option₁>: <value₁>, ..., <optionₙ>: <valueₙ>)`. The `<optionᵢ>:<valueᵢ>` are `fletcher` options and are passed to the node or edge with id `<id>` in the yade diagram. [`diagram`, `nodes_and_edges`]
 
 ## Dependancies
 

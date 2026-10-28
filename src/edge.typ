@@ -289,7 +289,7 @@
     }
   }
 
-  return args
+  return arguments(..args)
 }
 
 

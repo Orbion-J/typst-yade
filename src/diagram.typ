@@ -54,35 +54,71 @@
   )
 }
 
-#let _nodes_and_edges(diagram, dictionary, text_font, scale: 1) = {
-  let args = _nodes_and_edges_args(diagram, dictionary, text_font, scale: scale)
-  (
-    ..args.nodes.map(n => fletcher.node(..n)),
-    ..args.edges.map(e => fletcher.edge(..e)),
+#let add_extra_args(args, extra_args) = {
+  let id = str(args.name)
+  arguments(
+    ..(args.pos()),
+    ..(args.named() + extra_args.at(id, default: none)),
   )
 }
 
-#let _diagram(diagram, dictionary, text_font, scale: 1, debug: false) = {
+#let _nodes_and_edges(
+  diagram,
+  dictionary,
+  text_font,
+  extra_args,
+  scale: 1,
+) = {
+  let args = _nodes_and_edges_args(diagram, dictionary, text_font, scale: scale)
+  (
+    ..args.nodes.map(n => {
+      let n = add_extra_args(n, extra_args)
+      fletcher.node(..n)
+    }),
+    ..args.edges.map(e => {
+      let e = add_extra_args(e, extra_args)
+      fletcher.edge(..e)
+    }),
+  )
+}
+
+#let _diagram(
+  diagram,
+  dictionary,
+  text_font,
+  scale: 1,
+  debug: false,
+  extra: (:),
+) = {
   fletcher.diagram(
     debug: debug,
-    _nodes_and_edges(diagram, dictionary, text_font, scale: scale),
+    _nodes_and_edges(diagram, dictionary, text_font, extra, scale: scale),
   )
 }
 
 #let diagram(
   diagram,
   dictionary: (:),
+  extra: (:),
   text_font: "New Computer Modern",
   scale: 1,
   debug: false,
-) = _diagram(diagram, dictionary, text_font, scale: scale, debug: debug)
+) = _diagram(
+  diagram,
+  dictionary,
+  text_font,
+  scale: scale,
+  debug: debug,
+  extra: extra,
+)
 
 #let nodes_and_edges(
   diagram,
   dictionary: (:),
+  extra: (:),
   text_font: "New Computer Modern",
   scale: 1,
-) = _nodes_and_edges(diagram, dictionary, text_font, scale: scale)
+) = _nodes_and_edges(diagram, dictionary, text_font, scale: scale, extra: extra)
 
 #let nodes_and_edges_args(
   diagram,
