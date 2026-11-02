@@ -118,6 +118,11 @@
       if pos == auto { 50% } else { float(pos) }
     },
     label-angle: 0deg,
+    label-sep: if find("marker") == "|" {
+      7pt
+    } else {
+      3pt
+    },
 
     // Marks: tail, marker, head
     marks: (
@@ -381,7 +386,10 @@
     preamble,
     dictionnary,
     size: 0.7em,
-    fill: resolve_color(json_edge.label.options.at("labelColor", default: edge_color)),
+    fill: resolve_color(json_edge.label.options.at(
+      "labelColor",
+      default: edge_color,
+    )),
   )
 
   let args = make_args(
