@@ -2,6 +2,8 @@
 
 // #set page(width: auto, height: auto, margin: 10%)
 
+#let debug = 0
+// #let debug = "edge.snap.from"
 
 #let bend = -.5
 #let bezier_point_func = (s, e) => {
@@ -26,47 +28,47 @@
   node(x, $X'$, <x>),
   node(y, $Y'$, <y>),
   edge(stroke: green, snap-to: auto, <x>, <y>),
-  debug: "edge.snap.from",
+  debug: debug,
 )
 #diagram(
   node(x, $X''$, <x>),
   node(y, $Y''$, <y>),
   edge(<x>, <y>),
-  debug: "edge.snap.from",
+  debug: debug,
 )
 #diagram(
   node(x, $X''$, <x>),
   node(y, $Y''$, <y>),
-  edge(<x>, <y>, stroke: green, snap-to: auto, draw: ((a, b)) => cetz.draw.line(
+  edge(<x>, <y>, stroke: green, snap-to: auto, path: ((a, b)) => cetz.draw.line(
     a,
     b,
   )),
-  debug: "edge.snap.from",
+  debug: debug,
 )
 #diagram(
   node(x, $X'$, <x>),
   node(y, $Y'$, <y>),
-  edge(<x>, <y>, stroke: blue, draw: ((a, b)) => cetz.draw.bezier(
+  edge(<x>, <y>, stroke: blue, path: ((a, b)) => cetz.draw.bezier(
     a,
     b,
     bezier_point_func(a, b),
   )),
-  debug: "edge.snap.from",
+  debug: debug,
 )
 #diagram(
   node(x, $X''$, <x>),
   node(y, $Y''$, <y>),
-  edge(<x>, <y>, stroke: blue, draw: ((a, b)) => cetz.draw.bezier(
+  edge(<x>, <y>, stroke: blue, path: ((a, b)) => cetz.draw.bezier(
     a,
     b,
     bezier_point_func(a, b),
   )),
-  edge(<x>, <y>, stroke: red, draw: ((a, b)) => cetz.draw.bezier-through(
+  edge(<x>, <y>, stroke: red, path: ((a, b)) => cetz.draw.bezier-through(
     a,
     (-2em, -2em),
     b,
   )),
-  debug: "edge.snap.from",
+  debug: debug,
 )
 #diagram(
   node(x, $X''$, <x>),
@@ -75,18 +77,18 @@
   // edge(<x>, <y>, bend: 30deg, stroke: red),
   edge(<x>, <y>, through: (-.5em, -2em), stroke: red),
   // edge(<x>, <y>, ctrl-pts: ((-2em, -2em),), stroke: purple),
-  // edge(<x>, <y>, stroke: blue, draw: ((a, b)) => cetz.draw.bezier(
-  edge(vertices: (x, y), stroke: blue, draw: ((a, b)) => cetz.draw.bezier(
+  // edge(<x>, <y>, stroke: blue, path: ((a, b)) => cetz.draw.bezier(
+  edge(vertices: (x, y), stroke: blue, path: ((a, b)) => cetz.draw.bezier(
     a,
     b,
     bezier_point_func(a, b),
   )),
-  // edge(stroke: red, snap-to: auto, draw: ((a, b)) => cetz.draw.line(
+  // edge(stroke: red, snap-to: auto, path: ((a, b)) => cetz.draw.line(
   //   a,
   //   b,
   // )),
   // debug: true,
-  debug: "edge.snap.from",
+  debug: debug,
 )
 /*
 #diagram(
@@ -95,18 +97,18 @@
   // edge(stroke: green, snap-to: auto, cetz.draw.line(x, y)),
   // edge(<x>, <y>, bend: 30deg, stroke: red),
   // edge(<x>, <y>, through: (uv: (.5, .5)), stroke: green),
-  // edge(<x>, <y>, stroke: blue, draw: ((a, b)) => cetz.draw.bezier(
-  edge(vertices: (x, y), stroke: blue, draw: ((a, b)) => cetz.draw.bezier(
+  // edge(<x>, <y>, stroke: blue, path: ((a, b)) => cetz.draw.bezier(
+  edge(vertices: (x, y), stroke: blue, path: ((a, b)) => cetz.draw.bezier(
     a,
     b,
     bezier_point_func(a, b),
   )),
-  // edge(stroke: red, snap-to: auto, draw: ((a, b)) => cetz.draw.line(
+  // edge(stroke: red, snap-to: auto, path: ((a, b)) => cetz.draw.line(
   //   a,
   //   b,
   // )),
   // debug: true,
-  debug: "edge.snap.from",
+  debug: debug,
 )
 */
 
@@ -116,6 +118,6 @@
   node(x, $X''$, <x>),
   node(y, $Y''$, <y>),
   edge(<x>, <y>, through: (-.5em, -2em), stroke: red),
-  debug: "edge.snap.from",
+  debug: debug,
 )
 /*

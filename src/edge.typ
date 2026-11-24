@@ -63,10 +63,12 @@
   json_options,
   zindex,
   size,
+  crossing-fill,
+  edge-fill,
 ) = {
   let find(opt, default: auto) = json_options.at(opt, default: default)
 
-  let edge_color = resolve_color(find("color "))
+  let edge_color = resolve_color(find("color ", default: edge-fill))
 
   let args = (
     // Base
@@ -84,7 +86,9 @@
     label: label(edge_color),
     corner-radius: none,
     layer: zindex,
-    crossing: true, // not supported by fletcher yet it seems
+    crossing: crossing-fill != none,
+    crossing-fill: if crossing-fill != none { crossing-fill } else { auto },
+    crossing-thickness: 5,
 
     // Shorten if a 2-cell
     shorten: {
@@ -370,6 +374,8 @@
   json_edges,
   id_edges,
   pullshout_info,
+  crossing-fill,
+  edge-fill,
 ) = {
   let (start, start_is_edge, end, end_is_edge) = make_start_end(
     json_edge,
@@ -402,13 +408,15 @@
     json_edge.label.options,
     json_edge.label.zindex,
     size,
+    crossing-fill,
+    edge-fill,
   )
 
   args
 }
 
 
-#let make_edges(json_edges, size, preamble, dictionnary) = {
+#let make_edges(json_edges, size, preamble, dictionnary, crossing-fill, edge-fill) = {
   let id_edges = json_edges.map(e => e.id)
 
   // For each edge, if its a pullshout, insert two edges
@@ -439,6 +447,8 @@
       json_edges,
       id_edges,
       ewp.pullshout,
+      crossing-fill,
+      edge-fill,
     )
   })
 }

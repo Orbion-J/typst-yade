@@ -64,11 +64,11 @@ Use the `nodes_and_edges` function to get the lists of `fletcher` nodes and edge
 ```typ
 #import "@local/fletcher:0.6.0" as fletcher
 
-#let NnE = yade.nodes_and_edges(```yade
+#let ne = yade.nodes_and_edges(```yade
 {"graph":{"activeTabId":0,"latexBackgroundColor":"white","latexPreamble":"\\newcommand{\\coqproof}[1]{\\checkmark}","nextTabId":1,"tabs":[{"edges":[{"from":0,"id":4,"label":{"label":"h","options":{},"zindex":0},"to":1},{"from":2,"id":5,"label":{"label":"f","options":{},"zindex":0},"to":3},{"from":0,"id":6,"label":{"label":"k","options":{"alignment":"right"},"zindex":0},"to":2},{"from":1,"id":7,"label":{"label":"g","options":{},"zindex":0},"to":3}],"freehandDrawings":[],"id":0,"nextGraphId":8,"nodes":[{"id":0,"label":{"label":"A","options":{},"pos":[533,117],"zindex":0}},{"id":1,"label":{"label":"B","options":{},"pos":[611,117],"zindex":0}},{"id":2,"label":{"label":"C","options":{},"pos":[585,195],"zindex":0}},{"id":3,"label":{"label":"D","options":{},"pos":[663,195],"zindex":0}}],"sizeGrid":26,"title":"1"}]},"version":20}
 ```)
 
-#fletcher.diagram(..NnE)
+#fletcher.diagram(..ne)
 ```
 
 <div align="center">
@@ -80,12 +80,14 @@ Use the `nodes_and_edges` function to get the lists of `fletcher` nodes and edge
 ## Options
 
 The three functions have the following options allowing to customize the appearance of your diagrams
-- `text_font` the font for text nodes (default `"New Computer Modern"`) [`yade`, `diagram`, `nodes_and_edges`]
-- `size` text size (default `auto`) [`yade`]
-- `scale` a scaling level applied to the structure of the diagram (not to the text). Can be a number or `none` to disable the default scaling (default `1`) [`yade`, `diagram`, `nodes_and_edges`]
-- `debug` the level of debug you want to display. See `fletcher`'s debug option (default `false`) [`yade`, `diagram`]
-- `dictionary` a dictionary of pairs `<key>: <content>`. Labels of nodes and edges of the form `typ:<key>` are interpreted as `<content>` [`yade`, `diagram`, `nodes_and_edges`]
-- `extra` a dictionary of pairs `"<id>": (<option₁>: <value₁>, ..., <optionₙ>: <valueₙ>)`. The `<optionᵢ>:<valueᵢ>` are `fletcher` options and are passed to the node or edge with id `<id>` in the yade diagram. [`diagram`, `nodes_and_edges`]
+- `text-font : str` the font for text nodes (default `"New Computer Modern"`) [`yade`, `diagram`, `nodes_and_edges`]
+- `size : auto | length | float` text size (default `auto`) [`yade`, `diagram`]
+- `scale : float` a scaling level applied to the structure of the diagram (not to the text). Can be a number or `none` to disable the default scaling (default `1`) [`yade`, `diagram`, `nodes_and_edges`]
+- `debug : int` the level of debug you want to display. See `fletcher`'s debug option (default `false`) [`yade`, `diagram`]
+- `dictionary : dictionary` a dictionary of pairs `<key>: <content>`. Labels of nodes and edges of the form `typ:<key>` are interpreted as `<content>` [`yade`, `diagram`, `nodes_and_edges`]
+- `extra : dictionary` a dictionary of pairs `"<id>": (<option₁>: <value₁>, ..., <optionₙ>: <valueₙ>)`. The `<optionᵢ>:<valueᵢ>` are `fletcher` options and are passed to the node or edge with id `<id>` in the yade diagram. [`diagram`, `nodes_and_edges`]
+- `crossing-fill : auto | none | color` how to fill the crossing gaps (default `auto`, set to `none` to disable crossing) [`yade`, `diagram`, `nodes_and_edges`]
+- `edge-fill : auto | color` default color for edges (default `auto`) [`yade`, `diagram`, `nodes_and_edges`]
 
 ## Dependancies
 
@@ -96,5 +98,6 @@ This package depends on
 
 ## Known issues
 
-- some bend arrows do not snap
+- ~~some bend arrows do not snap~~ seems resolved
 - pullback arrows scale
+- crossing on 2-cells may affects the 1-cells (fix: tweak the layers)

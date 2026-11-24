@@ -6,7 +6,11 @@
 // #let base_scale = .05 // à vue de nez
 #let supported_yade_version = 20
 
-#let _nodes_and_edges_args(diagram, dictionary, text_font, scale: 1) = {
+
+// A dictionary (nodes: array, edges: array)
+// where nodes (resp. edges) is a list of arguments objects, one for each fletcher node (resp. edge) object in the final diagram
+#let _nodes_and_edges_args(..diag_args) = {
+  let diagram = diag_args.diagram
   let json_diagram = if type(diagram) == dictionary {
     diagram
   } else if type(diagram) == content and diagram.func() == raw {
@@ -32,7 +36,7 @@
   let nodes = tab.nodes
   let edges = tab.edges
   let size = (
-    if scale == none { 20 } else { 2 / 3 * 1 / scale * tab.sizeGrid }
+    if diag_args.scale == none { 20 } else { 2 / 3 * 1 / diag_args.scale * tab.sizeGrid }
     // 1 / base_scale * if scale == none { 1 } else { 1 / scale * tab.sizeGrid }
   )
   let preamble = graph.latexPreamble
@@ -42,14 +46,16 @@
       nodes,
       size,
       preamble,
-      dictionary,
-      text_font,
+      diag_args.dictionary,
+      diag_args.text-font,
     ),
     edges: make_edges(
       edges,
       size,
       preamble,
-      dictionary,
+      diag_args.dictionary,
+      diag_args.crossing-fill,
+      diag_args.edge-fill,
     ),
   )
 }
@@ -62,37 +68,24 @@
   )
 }
 
-#let _nodes_and_edges(
-  diagram,
-  dictionary,
-  text_font,
-  extra_args,
-  scale: 1,
-) = {
-  let args = _nodes_and_edges_args(diagram, dictionary, text_font, scale: scale)
+#let _nodes_and_edges(..diag_args) = {
+  let ne_args = _nodes_and_edges_args(..diag_args)
   (
-    ..args.nodes.map(n => {
-      let n = add_extra_args(n, extra_args)
+    ..ne_args.nodes.map(n => {
+      let n = add_extra_args(n, diag_args.extra)
       fletcher.node(..n)
     }),
-    ..args.edges.map(e => {
-      let e = add_extra_args(e, extra_args)
+    ..ne_args.edges.map(e => {
+      let e = add_extra_args(e, diag_args.extra)
       fletcher.edge(..e)
     }),
   )
 }
 
-#let _diagram(
-  diagram,
-  dictionary,
-  text_font,
-  scale: 1,
-  debug: false,
-  extra: (:),
-) = {
+#let _diagram(..diag_args) = {
   fletcher.diagram(
-    debug: debug,
-    _nodes_and_edges(diagram, dictionary, text_font, extra, scale: scale),
+    debug: diag_args.debug,
+    _nodes_and_edges(..diag_args),
   )
 }
 
@@ -100,79 +93,67 @@
   diagram,
   dictionary: (:),
   extra: (:),
-  text_font: "New Computer Modern",
+  text-font: "New Computer Modern",
+  crossing-fill: auto,
+  edge-fill: auto,
   scale: 1,
   debug: false,
-) = _diagram(
-  diagram,
-  dictionary,
-  text_font,
-  scale: scale,
-  debug: debug,
-  extra: extra,
-)
+  size: auto,
+) = {
+  let size = if size == auto {
+    1em
+  } else if type(size) == length {
+    size
+  } else {
+    size * 1em
+  }
+  set text(size)
+  _diagram(
+    diagram: diagram,
+    dictionary: dictionary,
+    extra: extra,
+    text-font: text-font,
+    crossing-fill: crossing-fill,
+    edge-fill: edge-fill,
+    scale: scale,
+    debug: debug,
+  )
+}
 
 #let nodes_and_edges(
   diagram,
   dictionary: (:),
   extra: (:),
-  text_font: "New Computer Modern",
+  text-font: "New Computer Modern",
+  crossing-fill: auto,
+  edge-fill: auto,
   scale: 1,
-) = _nodes_and_edges(diagram, dictionary, text_font, scale: scale, extra: extra)
+) = _nodes_and_edges(
+  diagram: diagram,
+  dictionary: dictionary,
+  extra: extra,
+  text-font: text-font,
+  crossing-fill: crossing-fill,
+  edge-fill: edge-fill,
+  scale: scale,
+)
 
-#let nodes_and_edges_args(
-  diagram,
-  dictionary: (:),
-  text_font: "New Computer Modern",
-  scale: 1,
-) = _nodes_and_edges_args(diagram, dictionary, text_font, scale: scale)
-
-#let nodes_and_edges_metadata(
-  diagram,
-  dictionary: (:),
-  text_font: "New Computer Modern",
-  scale: 1,
-) = {
-  let args = nodes_and_edges_args(
-    diagram,
-    dictionary: dictionary,
-    text_font: text_font,
-    scale: scale,
-  )
-  let output = ""
-  for n in args.nodes {
-    let x = str(repr(n))
-    x = x.replace("\n", "").replace("  ", " ").replace("( ", "(")
-    x = x.replace("arguments", "node")
-    x = x
-      .replace("body: styled(child: equation(block: false, ", "")
-      .replace("]), ..)", "]")
-    output += x + ", "
-  }
-  for e in args.edges {
-    let x = str(repr(e))
-    x = x.replace("\n", "").replace("  ", " ").replace("( ", "(")
-    x = x
-      .replace(
-        "label: styled(child: equation( block: false,  body: equation(block: false, body:",
-        "label: ",
-      )
-      .replace("]), ), ..)", "]")
-    x = x.replace("label: styled(child: [], ..), ", "")
-    output += "edge" + x + ", "
-  }
-  // pretty: false,
-  // ),
-  metadata(output)
-}
+// #let nodes_and_edges_args(
+//   diagram,
+//   dictionary: (:),
+//   text_font: "New Computer Modern",
+//   scale: 1,
+// ) = _nodes_and_edges_args(diagram, dictionary, text_font, scale: scale)
 
 #let yade(
   body,
   dictionary: (:),
-  size: auto,
+  text-font: "New Computer Modern",
+  crossing-fill: auto,
+  edge-fill: auto,
   scale: 1,
-  text_font: "New Computer Modern",
   debug: false,
+  size: auto,
 ) = {
   // let text_size = state("text_size", 1em)
   // context {
@@ -188,7 +169,17 @@
   }
   show raw.where(lang: "yade"): it => {
     set text(size)
-    _diagram(it, dictionary, text_font, scale: scale, debug: debug)
+    set align(center)
+    _diagram(
+      diagram: it,
+      dictionary: dictionary,
+      extra: (:),
+      text-font: text-font,
+      crossing-fill: crossing-fill,
+      edge-fill: edge-fill,
+      scale: scale,
+      debug: debug,
+    )
   }
   body
 }
